@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eventPublisher
+        name="IsAnalytics-Publisher-moesif-MoesifFlowData"
+        statistics="disable" trace="disable" xmlns="http://wso2.org/carbon/eventpublisher">
+    <from streamName="org.wso2.is.analytics.stream.MoesifFlowData" version="1.0.0"/>
+    <mapping customMapping="disable" type="json" />
+    <to eventAdapterType="moesif-http">
+        <property name="http.client.method">httpPost</property>
+        <property name="http.url">https://api.moesif.net/v1/actions</property>
+        <property name="http.secret.provider">MOESIF_SECRET_PROVIDER</property>
+        <property name="http.authType">API_KEY</property>
+        <property name="http.apiKeyHeader">X-Moesif-Application-Id</property>
+    </to>
+</eventPublisher>
