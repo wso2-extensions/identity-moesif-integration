@@ -137,6 +137,12 @@
                 <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
                 <version>${identity.organization.management.core.version}</version>
             </dependency>
+            <!-- Identity OAuth2 -->
+            <dependency>
+                <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+                <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+                <version>${identity.inbound.auth.oauth.version}</version>
+            </dependency>
             <!-- Logging -->
             <dependency>
                 <groupId>org.wso2.org.ops4j.pax.logging</groupId>
@@ -267,6 +273,9 @@
         <!-- Organization Management -->
         <identity.organization.management.core.version>1.5.2</identity.organization.management.core.version>
         <identity.organization.management.core.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.organization.management.core.imp.pkg.version.range>
+        <!-- Identity OAuth2 -->
+        <identity.inbound.auth.oauth.version>7.0.358</identity.inbound.auth.oauth.version>
+        <identity.inbound.auth.oauth.import.version.range>[6.7.116, 8.0.0)</identity.inbound.auth.oauth.import.version.range>
         <!-- Data Publisher -->
         <identity.datapublisher.authentication.version>5.10.1</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>

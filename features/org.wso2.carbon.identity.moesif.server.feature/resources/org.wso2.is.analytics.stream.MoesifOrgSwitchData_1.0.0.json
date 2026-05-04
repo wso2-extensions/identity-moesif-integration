@@ -1,0 +1,50 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifOrgSwitchData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "Event stream for organization-switch grant events published to Moesif.",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "userResidentOrgId",
+      "type": "STRING"
+    },
+    {
+      "name": "accessingOrgId",
+      "type": "STRING"
+    },
+    {
+      "name": "spName",
+      "type": "STRING"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "errorCode",
+      "type": "STRING"
+    },
+    {
+      "name": "publishingTime",
+      "type": "STRING"
+    }
+  ]
+}

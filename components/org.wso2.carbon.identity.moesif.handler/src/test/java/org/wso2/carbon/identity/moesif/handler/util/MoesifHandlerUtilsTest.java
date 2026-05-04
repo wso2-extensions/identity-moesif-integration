@@ -114,10 +114,14 @@ public class MoesifHandlerUtilsTest {
 
         Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(
                 null, null, null, null, null, null, null);
-        for (int i = 0; i < 7; i++) {
+        // Indices 0-5 are nullable fields that default to NOT_AVAILABLE.
+        for (int i = 0; i < 6; i++) {
             assertEquals(payload[i], MoesifHandlerConstants.NOT_AVAILABLE,
                     "Null field at index " + i + " should be NOT_AVAILABLE");
         }
+        // Index 6 is publishingTime (always set); index 7 is errorCode (null → NOT_AVAILABLE).
+        assertEquals(payload[7], MoesifHandlerConstants.NOT_AVAILABLE,
+                "Null errorCode at index 7 should be NOT_AVAILABLE");
     }
 
     // ---- extractUserAgent -------------------------------------------------------

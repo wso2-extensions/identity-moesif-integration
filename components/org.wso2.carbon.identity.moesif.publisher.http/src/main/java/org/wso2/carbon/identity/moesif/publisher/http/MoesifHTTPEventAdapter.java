@@ -70,7 +70,13 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
     @Override
     protected String buildBody(Object message) {
 
-        JsonObject rawMessage = GSON.fromJson(message.toString(), JsonObject.class);
+        JsonObject rawMessage = null;
+        try {
+            rawMessage = GSON.fromJson(message.toString(), JsonObject.class);
+        } catch (com.google.gson.JsonSyntaxException ignored) {
+            // Input is not a JSON object (e.g. the literal "null"); treat as empty.
+        }
+
         JsonObject result = new JsonObject();
 
         if (rawMessage == null) {

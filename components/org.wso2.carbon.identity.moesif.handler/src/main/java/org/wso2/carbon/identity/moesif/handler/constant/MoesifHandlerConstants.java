@@ -55,6 +55,19 @@ public class MoesifHandlerConstants {
     /** Event name for user registration events. */
     public static final String POST_ADD_USER = "POST_ADD_USER";
 
+    // ── Organization Switch handler ──────────────────────────────────────────────
+
+    public static final String ORG_SWITCH_PUBLISHER_NAME = "moesifOrgSwitchPublisher";
+    public static final String ORG_SWITCH_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifOrgSwitchData:1.0.0";
+    public static final String ORG_SWITCH_PUBLISHER_ENABLED = "moesifOrgSwitchPublisher.enable";
+    public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
+    public static final String POST_ORGANIZATION_SWITCH_EVENT = "POST_ORGANIZATION_SWITCH_EVENT";
+    /** Event property key carrying the {@code OAuthTokenReqMessageContext}. */
+    public static final String OAUTH_TOKEN_REQ_MESSAGE_CONTEXT = "OAUTH_TOKEN_REQ_MESSAGE_CONTEXT";
+    /** Property key under which the {@code OAuthAppDO} is stored in the token-request context. */
+    public static final String OAUTH_APP_DO_PROPERTY = "OAuthAppDO";
+
     /** Tenant domain names property key used to resolve publishing domains. */
     public static final String TENANT_DOMAIN_NAMES = "tenantDomainNames";
 
