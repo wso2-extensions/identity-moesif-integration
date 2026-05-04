@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2022, WSO2 Inc. (http://www.wso2.com). All Rights Reserved.
+  ~
+  ~ This software is the property of WSO2 Inc. and its suppliers, if any.
+  ~ Dissemination of any information or reproduction of any material contained
+  ~ herein in any form is strictly forbidden, unless permitted by WSO2 expressly.
+  ~ You may not alter or remove any copyright or other notice from copies of this content.
+  -->
+
+<eventPublisher
+        name="IsAnalytics-Publisher-moesif-MoesifUserRegistrationData"
+        statistics="disable" trace="disable" xmlns="http://wso2.org/carbon/eventpublisher">
+    <from streamName="org.wso2.is.analytics.stream.MoesifUserRegistrationData" version="1.0.0"/>
+    <mapping customMapping="disable" type="json" />
+    <to eventAdapterType="moesif-http">
+        <property name="http.client.method">httpPost</property>
+        <property name="http.url">https://api.moesif.net/v1/actions</property>
+        <property name="http.secret.provider">MOESIF_SECRET_PROVIDER</property>
+        <property name="http.authType">API_KEY</property>
+        <property name="http.apiKeyHeader">X-Moesif-Application-Id</property>
+    </to>
+</eventPublisher>
