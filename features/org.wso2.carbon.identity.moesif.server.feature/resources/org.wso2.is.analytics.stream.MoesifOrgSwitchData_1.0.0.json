@@ -1,0 +1,50 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifOrgSwitchData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "userResidentOrgId",
+      "type": "STRING"
+    },
+    {
+      "name": "userLoginOrgId",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceProvider",
+      "type": "STRING"
+    },
+    {
+      "name" : "tenantDomain",
+      "type" : "MAP"
+    },
+    {
+      "name": "errorCode",
+      "type": "MAP"
+    },
+    {
+      "name": "publishTime",
+      "type": "STRING"
+    }
+  ]
+}
