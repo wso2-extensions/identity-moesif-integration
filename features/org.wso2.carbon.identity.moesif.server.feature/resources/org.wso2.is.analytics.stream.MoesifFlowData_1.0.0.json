@@ -31,11 +31,11 @@
       "type": "STRING"
     },
     {
-      "name": "flowStepId",
+      "name": "currentNodeId",
       "type": "STRING"
     },
     {
-      "name" : "nodeType",
+      "name" : "currentNodeType",
       "type" : "MAP"
     },
     {
@@ -45,6 +45,30 @@
     {
       "name": "tenantDomain",
       "type": "STRING"
+    },
+    {
+      "name": "nodeResponseStatus",
+      "type": "STRING"
+    },
+    {
+      "name": "nodeResponseType",
+      "type": "STRING"
+    },
+    {
+      "name": "applicationId",
+      "type": "STRING"
+    },
+    {
+      "name": "executerName",
+      "type": "STRING"
+    },
+    {
+      "name": "organizationId",
+      "type": "STRING"
+    },
+    {
+      "name": "isOrganizationLogin",
+      "type": "BOOL"
     },
     {
       "name": "publishTimestamp",
