@@ -136,7 +136,23 @@
     },
     {
       "name": "spResidingOrgId",
-      "type": "STRINGx"
+      "type": "STRING"
+    },
+    {
+      "name": "isOrganizationLogin",
+      "type": "BOOL"
+    },
+    {
+      "name": "isSharedAppLogin",
+      "type": "BOOL"
+    },
+    {
+      "name": "idps",
+      "type": "ARRAY"
+    },
+    {
+      "name": "authenticators",
+      "type": "ARRAY"
     },
     {
       "name": "customParam1",
