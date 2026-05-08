@@ -27,12 +27,16 @@
       "type": "STRING"
     },
     {
-      "name": "userLoginOrgId",
+      "name": "userAccessingOrgId",
       "type": "STRING"
     },
     {
       "name": "serviceProvider",
       "type": "STRING"
+    },
+    {
+        "name": "serviceProviderTenantDomain",
+        "type": "STRING"
     },
     {
       "name" : "tenantDomain",

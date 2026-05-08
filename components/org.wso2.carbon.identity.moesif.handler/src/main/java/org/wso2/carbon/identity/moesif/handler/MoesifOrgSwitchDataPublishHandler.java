@@ -31,18 +31,18 @@ import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
-import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
-import org.wso2.carbon.identity.oauth2.token.OAuthTokenReqMessageContext;
 import org.wso2.carbon.identity.organization.management.service.constant.OrganizationManagementConstants;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.*;
-
+import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ACTION_NAME_ORG_SWITCH;
+import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_PUBLISHER_ENABLED;
+import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_PUBLISHER_NAME;
+import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_STREAM_NAME;
 
 /**
  * Event handler that publishes organization-switch token grant events to Moesif.
@@ -54,9 +54,11 @@ import static org.wso2.carbon.identity.data.publisher.authentication.moesif.Moes
 public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
 
     private static final Log LOG = LogFactory.getLog(MoesifOrgSwitchDataPublishHandler.class);
-    private static final String OAUTH_TOKEN_REQ_MESSAGE_CONTEXT = "OAUTH_TOKEN_REQ_MESSAGE_CONTEXT";
     private static final String POST_ORGANIZATION_SWITCH_EVENT = "POST_ORGANIZATION_SWITCH_EVENT";
-    private static final String OAUTH_APP_DO_PROPERTY = "OAuthAppDO";
+    private static final String EVENT_PROP_AUTHENTICATED_USER = "AUTHENTICATED_USER";
+    private static final String EVENT_PROP_APPLICATION_NAME = "APPLICATION_NAME";
+    private static final String EVENT_PROP_APPLICATION_TENANT_DOMAIN = "APPLICATION_TENANT_DOMAIN";
+    private static final String EVENT_PROP_TENANT_DOMAIN = "TENANT_DOMAIN";
 
     @Override
     public String getName() {
@@ -77,38 +79,24 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
 
         Map<String, Object> eventProperties = event.getEventProperties();
 
-        OAuthTokenReqMessageContext tokenReqCtx =
-                (OAuthTokenReqMessageContext) eventProperties.get(OAUTH_TOKEN_REQ_MESSAGE_CONTEXT);
-        if (tokenReqCtx == null) {
-            LOG.warn("OAuthTokenReqMessageContext is missing in " + POST_ORGANIZATION_SWITCH_EVENT + " event.");
-            return;
-        }
-
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) eventProperties.get(EVENT_PROP_AUTHENTICATED_USER);
+        String applicationName = (String) eventProperties.get(EVENT_PROP_APPLICATION_NAME);
+        String applicationTenantDomain = (String) eventProperties.get(EVENT_PROP_APPLICATION_TENANT_DOMAIN);
+        String tenantDomain = (String) eventProperties.get(EVENT_PROP_TENANT_DOMAIN);
         String errorCode = (String) eventProperties.get(IdentityEventConstants.EventProperty.ERROR_CODE);
 
-        AuthenticatedUser authorizedUser = tokenReqCtx.getAuthorizedUser();
-        if (authorizedUser == null) {
+        if (authenticatedUser == null) {
             LOG.warn("AuthenticatedUser is null in OAuthTokenReqMessageContext; skipping org-switch event.");
             return;
         }
 
         // User's home organisation (where the user account resides).
         String userResidentOrgId = StringUtils.defaultIfBlank(
-                authorizedUser.getUserResidentOrganization(), NOT_AVAILABLE);
+                authenticatedUser.getUserResidentOrganization(), NOT_AVAILABLE);
 
         // Organisation the user switched to (login org).
         String accessingOrgId = StringUtils.defaultIfBlank(
-                authorizedUser.getAccessingOrganization(), NOT_AVAILABLE);
-
-        // Service-provider name carried in the token request context.
-        String spName = NOT_AVAILABLE;
-        OAuthAppDO oAuthAppDO = (OAuthAppDO) tokenReqCtx.getProperty(OAUTH_APP_DO_PROPERTY);
-        if (oAuthAppDO != null && StringUtils.isNotBlank(oAuthAppDO.getApplicationName())) {
-            spName = oAuthAppDO.getApplicationName();
-        }
-
-        // Tenant domain of the current thread (the accessing organisation).
-        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+                authenticatedUser.getAccessingOrganization(), NOT_AVAILABLE);
 
         // Resolve the company UUID for Moesif from the current tenant domain.
         String companyId = NOT_AVAILABLE;
@@ -134,7 +122,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         // User identifier from the authenticated user.
         String userId = NOT_AVAILABLE;
         try {
-            String resolvedUserId = authorizedUser.getUserId();
+            String resolvedUserId = authenticatedUser.getUserId();
             if (StringUtils.isNotBlank(resolvedUserId)) {
                 userId = resolvedUserId;
             }
@@ -148,7 +136,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
                 companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE);
 
         Object[] payloadData = buildPayload(
-                userResidentOrgId, accessingOrgId, spName, tenantDomain, errorCode);
+                userResidentOrgId, accessingOrgId, applicationName, applicationTenantDomain, tenantDomain, errorCode);
 
         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                 new org.wso2.carbon.databridge.commons.Event(
@@ -163,17 +151,18 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
     }
 
     private Object[] buildPayload(String userResidentOrgId, String accessingOrgId,
-                                  String spName, String tenantDomain, String errorCode) {
+                                  String spName, String applicationTenantDomain, String tenantDomain, String errorCode) {
 
         String publishingTime = Instant.now().toString();
 
-        Object[] payload = new Object[6];
+        Object[] payload = new Object[7];
         payload[0] = StringUtils.defaultIfBlank(userResidentOrgId, NOT_AVAILABLE);
         payload[1] = StringUtils.defaultIfBlank(accessingOrgId, NOT_AVAILABLE);
         payload[2] = StringUtils.defaultIfBlank(spName, NOT_AVAILABLE);
-        payload[3] = StringUtils.defaultIfBlank(tenantDomain, NOT_AVAILABLE);
-        payload[4] = StringUtils.defaultIfBlank(errorCode, NOT_AVAILABLE);
-        payload[5] = publishingTime;
+        payload[3] = StringUtils.defaultIfBlank(applicationTenantDomain, NOT_AVAILABLE);
+        payload[4] = StringUtils.defaultIfBlank(tenantDomain, NOT_AVAILABLE);
+        payload[5] = StringUtils.defaultIfBlank(errorCode, NOT_AVAILABLE);
+        payload[6] = publishingTime;
 
         return payload;
     }
