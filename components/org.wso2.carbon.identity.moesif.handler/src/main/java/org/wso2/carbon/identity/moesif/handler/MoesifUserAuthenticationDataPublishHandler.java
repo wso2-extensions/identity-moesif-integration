@@ -102,7 +102,7 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                             LOG.debug("Published Moesif login event for domain: " + publishingDomain);
                         }
                     } catch (OrganizationManagementException e) {
-                        throw new RuntimeException(e);
+                        LOG.error("Error while resolving organization ID for tenant domain: " + publishingDomain, e);
                     } finally {
                         FrameworkUtils.endTenantFlow();
                     }
