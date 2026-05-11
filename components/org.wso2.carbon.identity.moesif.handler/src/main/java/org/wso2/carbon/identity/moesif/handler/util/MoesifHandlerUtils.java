@@ -56,7 +56,10 @@ import java.util.TimeZone;
 
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.*;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.ADMIN_INITIATED;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.SELF_SIGNUP;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.USER_INVITE;
 
 import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
 import org.wso2.carbon.identity.recovery.util.Utils;
@@ -102,7 +105,7 @@ public class MoesifHandlerUtils {
         try {
             orgId = MoesifHandlerDataHolder.getInstance().getOrganizationManager().resolveOrganizationId(tenantDomain);
         } catch (OrganizationManagementException e) {
-            throw new RuntimeException(e);
+            orgId = NOT_AVAILABLE;
         }
 
         String userCreatedTime = getCreatedTimestamp(claims.get(USER_CREATED_TIME_URI));
@@ -161,7 +164,7 @@ public class MoesifHandlerUtils {
     }
 
     public static String replaceIfStringNotAvailable(String value) {
-        return value != null ? value : MoesifHandlerConstants.NOT_AVAILABLE;
+        return value != null ? value : NOT_AVAILABLE;
     }
 
     private static String getCreatedTimestamp(String createdTime) {
@@ -226,10 +229,10 @@ public class MoesifHandlerUtils {
     public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
         Object[] metaData = new Object[4];
 
-        metaData[0] = orgUuid != null ? orgUuid : MoesifHandlerConstants.NOT_AVAILABLE;
-        metaData[1] = actionName != null ? actionName : MoesifHandlerConstants.NOT_AVAILABLE;
-        metaData[2] = userId != null ? userId : MoesifHandlerConstants.NOT_AVAILABLE;
-        metaData[3] = userAgent != null ? userAgent : MoesifHandlerConstants.NOT_AVAILABLE;
+        metaData[0] = orgUuid != null ? orgUuid : NOT_AVAILABLE;
+        metaData[1] = actionName != null ? actionName : NOT_AVAILABLE;
+        metaData[2] = userId != null ? userId : NOT_AVAILABLE;
+        metaData[3] = userAgent != null ? userAgent : NOT_AVAILABLE;
 
         return metaData;
     }
