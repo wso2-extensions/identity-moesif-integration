@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.moesif.handler.util;
 
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -52,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
-
-
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
@@ -121,7 +118,6 @@ public class MoesifHandlerUtils {
         payload[3] = userOnboardedMethod;
         payload[4] = orgId != null ? orgId : "";
 
-
         return payload;
     }
 
@@ -164,6 +160,7 @@ public class MoesifHandlerUtils {
     }
 
     public static String replaceIfStringNotAvailable(String value) {
+
         return value != null ? value : NOT_AVAILABLE;
     }
 
