@@ -127,34 +127,35 @@ public class MoesifHandlerUtils {
      *
      * @return JSON string of the Moesif action body.
      */
-    public static Object[] buildMoesifFlowStepPayload(FlowEventContext context, String orgId, String parentOrgId) {
+    public static Object[] buildMoesifFlowStepPayload(Map<String, Object> eventProperties, String orgId, String parentOrgId) {
 
         String publishingTime = Instant.now().toString();
 
-        NodeResponse currentNodeResponse = context.getCurrentNodeResponse();
-        FlowExecutionStep step = context.getStep();
-        NodeConfig currentNode = context.getCurrentNode();
-        String errorCode = context.getErrorCode();
-        ExecutorDTO executorConfig = currentNode.getExecutorConfig();
-        if (currentNodeResponse.getError() != null) {
-            errorCode = currentNodeResponse.getError();
-        }
-
         Object[] payloadData = new Object[14];
-        payloadData[0] = replaceIfStringNotAvailable(context.getFlowType());
-        payloadData[1] = replaceIfStringNotAvailable(step != null ? step.getStepType() : null);
-        payloadData[2] = replaceIfStringNotAvailable(currentNode.getId());
-        payloadData[3] = replaceIfStringNotAvailable(currentNode.getType());
-        payloadData[4] = replaceIfStringNotAvailable(context.getContextIdentifier());
-        payloadData[5] = replaceIfStringNotAvailable(context.getTenantDomain());
-        payloadData[6] = replaceIfStringNotAvailable(currentNodeResponse.getStatus());
-        payloadData[7] = replaceIfStringNotAvailable(currentNodeResponse.getType());
-        payloadData[8] = replaceIfStringNotAvailable(context.getApplicationId());
-        payloadData[9] = replaceIfStringNotAvailable(executorConfig != null ? executorConfig.getName() : null);
+        payloadData[0] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.FLOW_TYPE));
+        payloadData[1] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.STEP_TYPE));
+        payloadData[2] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID));
+        payloadData[3] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_TYPE));
+        payloadData[4] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
+        payloadData[5] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
+        payloadData[6] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS));
+        payloadData[7] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_TYPE));
+        payloadData[8] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.APPLICATION_ID));
+        payloadData[9] = replaceIfStringNotAvailable((String)
+                eventProperties.get(IdentityEventConstants.EventProperty.EXECUTOR_NAME));
         payloadData[10] = orgId;
         payloadData[11] = !StringUtils.equals(orgId, parentOrgId);
         payloadData[12] = publishingTime;
-        payloadData[13] = replaceIfStringNotAvailable(errorCode);
+        payloadData[13] = replaceIfStringNotAvailable(IdentityEventConstants.EventProperty.ERROR_CODE);
 
         return payloadData;
     }

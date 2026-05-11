@@ -20,8 +20,8 @@ package org.wso2.carbon.identity.moesif.handler.util;
 
 import org.mockito.Mockito;
 import org.testng.annotations.Test;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
-import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,40 +80,54 @@ public class MoesifHandlerUtilsTest {
     @Test
     public void testBuildMoesifFlowStepPayloadAllFields() {
 
-        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(
-                "REGISTRATION", "VIEW", "STEP_1_VIEW_SUCCESS",
-                "PROMPT_NODE", "carbon.super", "flow-ctx-123", null);
+        Map<String, Object> eventProperties = buildFlowStepEventProperties(
+                "REGISTRATION", "VIEW", "STEP_1_VIEW_SUCCESS", "PROMPT_NODE", "flow-ctx-123",
+                "carbon.super", "SUCCESS", "NEXT", "app-1", "basic-executor", "OTP_EXPIRED");
+
+        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(eventProperties, "org-1", "parent-org");
         assertNotNull(payload);
-        assertEquals(payload.length, 8);
+        assertEquals(payload.length, 14);
         assertEquals(payload[0], "REGISTRATION");
         assertEquals(payload[1], "VIEW");
         assertEquals(payload[2], "STEP_1_VIEW_SUCCESS");
         assertEquals(payload[3], "PROMPT_NODE");
         assertEquals(payload[4], "flow-ctx-123");
         assertEquals(payload[5], "carbon.super");
-        assertNotNull(payload[6], "Publishing timestamp should not be null");
-        assertEquals(payload[7], MoesifHandlerConstants.NOT_AVAILABLE); // null errorCode → NOT_AVAILABLE
+        assertEquals(payload[6], "SUCCESS");
+        assertEquals(payload[7], "NEXT");
+        assertEquals(payload[8], "app-1");
+        assertEquals(payload[9], "basic-executor");
+        assertEquals(payload[10], "org-1");
+        assertEquals(payload[11], true);
+        assertNotNull(payload[12], "Publishing timestamp should not be null");
+        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
     }
 
     @Test
     public void testBuildMoesifFlowStepPayloadWithErrorCode() {
 
-        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(
-                "PASSWORD_RECOVERY", "TASK_EXECUTION", "STEP_2_TASK_EXECUTION_SUCCESS",
-                "TASK_NODE", "wso2.com", "ctx-abc", "OTP_EXPIRED");
+        Map<String, Object> eventProperties = buildFlowStepEventProperties(
+                "PASSWORD_RECOVERY", "TASK_EXECUTION", "STEP_2_TASK_EXECUTION_SUCCESS", "TASK_NODE", "ctx-abc",
+                "wso2.com", "SUCCESS", "EXECUTED", "app-22", "task-executor", "OTP_EXPIRED");
+
+        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(eventProperties, "org-1", "org-1");
         assertEquals(payload[0], "PASSWORD_RECOVERY");
-        assertEquals(payload[7], "OTP_EXPIRED");
+        assertEquals(payload[11], false);
+        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
     }
 
     @Test
     public void testBuildMoesifFlowStepPayloadNullsDefaultToNotAvailable() {
 
-        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(
-                null, null, null, null, null, null, null);
-        for (int i = 0; i < 7; i++) {
+        Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(new HashMap<>(), null, null);
+        for (int i = 0; i < 10; i++) {
             assertEquals(payload[i], MoesifHandlerConstants.NOT_AVAILABLE,
                     "Null field at index " + i + " should be NOT_AVAILABLE");
         }
+        assertEquals(payload[10], null);
+        assertEquals(payload[11], false);
+        assertNotNull(payload[12]);
+        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
     }
 
     @Test
@@ -161,5 +175,26 @@ public class MoesifHandlerUtilsTest {
         // Format: yyyy-MM-dd HH:mm:ss (19 chars)
         assertEquals(timestamp.length(), 19);
         assertTrue(timestamp.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
+    }
+
+    private Map<String, Object> buildFlowStepEventProperties(String flowType, String stepType, String currentNodeId,
+                                                             String currentNodeType, String contextId,
+                                                             String tenantDomain, String nodeResponseStatus,
+                                                             String nodeResponseType, String applicationId,
+                                                             String executorName, String errorCode) {
+
+        Map<String, Object> eventProperties = new HashMap<>();
+        eventProperties.put(IdentityEventConstants.EventProperty.FLOW_TYPE, flowType);
+        eventProperties.put(IdentityEventConstants.EventProperty.STEP_TYPE, stepType);
+        eventProperties.put(IdentityEventConstants.EventProperty.CURRENT_NODE_ID, currentNodeId);
+        eventProperties.put(IdentityEventConstants.EventProperty.CURRENT_NODE_TYPE, currentNodeType);
+        eventProperties.put(IdentityEventConstants.EventProperty.CONTEXT_ID, contextId);
+        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+        eventProperties.put(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS, nodeResponseStatus);
+        eventProperties.put(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_TYPE, nodeResponseType);
+        eventProperties.put(IdentityEventConstants.EventProperty.APPLICATION_ID, applicationId);
+        eventProperties.put(IdentityEventConstants.EventProperty.EXECUTOR_NAME, executorName);
+        eventProperties.put(IdentityEventConstants.EventProperty.ERROR_CODE, errorCode);
+        return eventProperties;
     }
 }
