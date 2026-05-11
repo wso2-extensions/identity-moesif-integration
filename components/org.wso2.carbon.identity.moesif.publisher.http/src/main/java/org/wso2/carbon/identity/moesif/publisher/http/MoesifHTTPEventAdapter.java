@@ -18,7 +18,11 @@
 
 package org.wso2.carbon.identity.moesif.publisher.http;
 
-import com.google.gson.*;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +81,12 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
             return GSON.toJson(result);
         }
 
-        // Nest the original event payload under "myData".
+        /*
+         * The payload data in the message needs to be added as metadata in the moesif request body,
+         * and all the entries in the metaData array need to be flattened to the root level of the moesif
+         * request body, so that they can be used as first-class properties in Moesif (e.g. company_id, action_name,
+         * user_id, user_agent etc.).
+         */
         if (rawMessage.has(EVENT_FIELD)) {
             JsonObject event = rawMessage.getAsJsonObject(EVENT_FIELD);
             if (event != null) {
@@ -140,13 +149,5 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
             }
         }
         return Optional.empty();
-    }
-
-    private String safeString(JsonArray array, int index) {
-
-        if (index >= 0 && index < array.size() && !array.get(index).isJsonNull()) {
-            return array.get(index).getAsString();
-        }
-        return NOT_AVAILABLE;
     }
 }

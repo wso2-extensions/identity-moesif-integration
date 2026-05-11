@@ -23,7 +23,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.configuration.mgt.core.ConfigurationManager;
 import org.wso2.carbon.identity.configuration.mgt.core.exception.ConfigurationManagementClientException;
-import org.wso2.carbon.identity.configuration.mgt.core.model.Attribute;
 import org.wso2.carbon.identity.configuration.mgt.core.model.Resource;
 import org.wso2.carbon.identity.configuration.mgt.core.model.Resources;
 import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementClientException;
@@ -64,41 +63,26 @@ public class MoesifConfigurationManagementServiceImplTest {
         service = new MoesifConfigurationManagementServiceImpl();
     }
 
-    // ── addMoesifPublisher — input validation (no DataHolder required) ────────
-
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testAddPublisherBlankNameThrows() throws MoesifConfigurationManagementException {
-
-        service.addMoesifPublisher("", "apiKey");
-    }
-
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testAddPublisherNullNameThrows() throws MoesifConfigurationManagementException {
-
-        service.addMoesifPublisher(null, "apiKey");
-    }
+    // ── addMoesifPublisher — input validation (name is fixed internally) ──────
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherBlankApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher(PUBLISHER_NAME, "");
+        service.addMoesifPublisher("");
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherNullApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher(PUBLISHER_NAME, null);
+        service.addMoesifPublisher(null);
     }
 
-    /**
-     * An unsupported name passes blank/apiKey validation and the duplicate check
-     * (resource not found), but then fails the hard-coded name guard.
-     */
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testAddPublisherUnsupportedNameThrows() throws Exception {
+    public void testAddPublisherAlreadyExistsThrows() throws Exception {
 
-        stubResourceNotFound("wrongName");
-        service.addMoesifPublisher("wrongName", "apiKey");
+        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(PUBLISHER_NAME)))
+                .thenReturn(buildResource(PUBLISHER_NAME));
+        service.addMoesifPublisher("apiKey");
     }
 
     // ── getMoesifPublisher ────────────────────────────────────────────────────
@@ -107,7 +91,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     public void testGetPublisherNotFoundThrows() throws Exception {
 
         stubResourceNotFound(PUBLISHER_NAME);
-        service.getMoesifPublisher(PUBLISHER_NAME);
+        service.getMoesifPublisher();
     }
 
     // ── getMoesifPublishers ───────────────────────────────────────────────────
@@ -163,46 +147,22 @@ public class MoesifConfigurationManagementServiceImplTest {
     // ── updateMoesifPublisherApiKey — input validation ────────────────────────
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testUpdatePublisherApiKeyBlankNameThrows() throws MoesifConfigurationManagementException {
-
-        service.updateMoesifPublisherApiKey("", "newKey");
-    }
-
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testUpdatePublisherApiKeyNullNameThrows() throws MoesifConfigurationManagementException {
-
-        service.updateMoesifPublisherApiKey(null, "newKey");
-    }
-
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyBlankKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.updateMoesifPublisherApiKey(PUBLISHER_NAME, "");
+        service.updateMoesifPublisherApiKey("");
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNullKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.updateMoesifPublisherApiKey(PUBLISHER_NAME, null);
+        service.updateMoesifPublisherApiKey(null);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNotFoundThrows() throws Exception {
 
         stubResourceNotFound(PUBLISHER_NAME);
-        service.updateMoesifPublisherApiKey(PUBLISHER_NAME, "newKey");
-    }
-
-    /**
-     * An unsupported name passes blank validation and the existence check (resource found),
-     * but then fails the hard-coded name guard.
-     */
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testUpdatePublisherApiKeyUnsupportedNameThrows() throws Exception {
-
-        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq("wrongName")))
-                .thenReturn(buildResource("wrongName"));
-        service.updateMoesifPublisherApiKey("wrongName", "newKey");
+        service.updateMoesifPublisherApiKey("newKey");
     }
 
     // ── deleteMoesifPublisher ─────────────────────────────────────────────────
@@ -211,7 +171,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     public void testDeletePublisherNotFoundThrows() throws Exception {
 
         stubResourceNotFound(PUBLISHER_NAME);
-        service.deleteMoesifPublisher(PUBLISHER_NAME);
+        service.deleteMoesifPublisher();
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

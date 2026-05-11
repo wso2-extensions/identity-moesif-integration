@@ -82,39 +82,28 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     private static final String DEFAULT_STREAM_VERSION = "1.0.0";
     private static final String DEFAULT_INLINE_BODY = "";
 
-    private static final String PUBLISHER_NAME = "moesifPublisher";
+    private static final String MOESIF_PUBLISHER_NAME = "moesifPublisher";
     private static final String PUBLISHER_STREAM = "org.wso2.is.analytics.stream.MoesifData";
 
     @Override
-    public MoesifPublisherDTO addMoesifPublisher(String name, String apiKeyValue)
+    public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue)
             throws MoesifConfigurationManagementException {
 
-        if (StringUtils.isBlank(name)) {
-            throw new MoesifConfigurationManagementClientException("MOESIF_60001",
-                    "Invalid input: publisher name is required.",
-                    "Publisher name cannot be empty.");
-        }
         if (StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60001",
                     "Invalid input: API key value is required.",
                     "API key value cannot be empty.");
         }
 
-        Optional<Resource> existingResource = getPublisherResource(name);
+        Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (existingResource.isPresent()) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60002",
-                    "A Moesif publisher already exists with the name: " + name,
+                    "A Moesif publisher already exists with the name: " + MOESIF_PUBLISHER_NAME,
                     "Conflict: publisher name already in use.");
         }
 
-        if (!PUBLISHER_NAME.equals(name)) {
-            throw new MoesifConfigurationManagementClientException("MOESIF_60001",
-                    "Unsupported publisher name: " + name,
-                    "Publisher name must be: " + PUBLISHER_NAME);
-        }
-
         MoesifPublisherDTO dto = new MoesifPublisherDTO();
-        dto.setName(name);
+        dto.setName(MOESIF_PUBLISHER_NAME);
         dto.setProviderURL(DEFAULT_PROVIDER_URL);
         dto.setAuthType(DEFAULT_AUTH_TYPE);
         dto.setStreamName(PUBLISHER_STREAM);
@@ -131,21 +120,22 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             reDeployEventPublisherConfiguration(resource);
             updateMoesifEnabledGovernanceConfig(Boolean.TRUE.toString());
             MoesifPublisherDTO result = new MoesifPublisherDTO();
-            result.setName(name);
+            result.setName(MOESIF_PUBLISHER_NAME);
             return result;
         } catch (ConfigurationManagementException e) {
-            throw handleConfigurationMgtException(e, "Error while adding Moesif publisher: " + name);
+            throw handleConfigurationMgtException(e, "Error while adding Moesif publisher: " +
+                    MOESIF_PUBLISHER_NAME);
         }
     }
 
     @Override
-    public MoesifPublisherDTO getMoesifPublisher(String publisherName)
+    public MoesifPublisherDTO getMoesifPublisher()
             throws MoesifConfigurationManagementException {
 
-        Optional<Resource> resourceOptional = getPublisherResource(publisherName);
+        Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60004",
-                    "Moesif publisher not found: " + publisherName,
+                    "Moesif publisher not found: " + MOESIF_PUBLISHER_NAME,
                     "No Moesif publisher exists with the given name.");
         }
         return buildMoesifPublisherFromResource(resourceOptional.get());
@@ -172,10 +162,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     }
 
     @Override
-    public MoesifPublisherDTO updateMoesifPublisherApiKey(String name, String apiKeyValue)
+    public MoesifPublisherDTO updateMoesifPublisherApiKey(String apiKeyValue)
             throws MoesifConfigurationManagementException {
 
-        if (StringUtils.isBlank(name)) {
+        if (StringUtils.isBlank(MOESIF_PUBLISHER_NAME)) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60001",
                     "Invalid input: publisher name is required.",
                     "Publisher name cannot be empty.");
@@ -186,21 +176,15 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     "API key value cannot be empty.");
         }
 
-        Optional<Resource> existingResource = getPublisherResource(name);
+        Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (existingResource.isEmpty()) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60004",
-                    "Moesif publisher not found: " + name,
+                    "Moesif publisher not found: " + MOESIF_PUBLISHER_NAME,
                     "No Moesif publisher exists with the given name.");
         }
 
-        if (!PUBLISHER_NAME.equals(name)) {
-            throw new MoesifConfigurationManagementClientException("MOESIF_60001",
-                    "Unsupported publisher name: " + name,
-                    "Publisher name must be: " + PUBLISHER_NAME);
-        }
-
         MoesifPublisherDTO dto = new MoesifPublisherDTO();
-        dto.setName(name);
+        dto.setName(MOESIF_PUBLISHER_NAME);
         dto.setProviderURL(DEFAULT_PROVIDER_URL);
         dto.setAuthType(DEFAULT_AUTH_TYPE);
         dto.setStreamName(PUBLISHER_STREAM);
@@ -217,35 +201,37 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             reDeployEventPublisherConfiguration(resource);
             updateMoesifEnabledGovernanceConfig(Boolean.TRUE.toString());
             MoesifPublisherDTO result = new MoesifPublisherDTO();
-            result.setName(name);
+            result.setName(MOESIF_PUBLISHER_NAME);
             return result;
         } catch (ConfigurationManagementException e) {
-            throw handleConfigurationMgtException(e, "Error while updating Moesif publisher: " + name);
+            throw handleConfigurationMgtException(e, "Error while updating Moesif publisher: " +
+                    MOESIF_PUBLISHER_NAME);
         }
     }
 
     @Override
-    public void deleteMoesifPublisher(String publisherName) throws MoesifConfigurationManagementException {
+    public void deleteMoesifPublisher() throws MoesifConfigurationManagementException {
 
-        Optional<Resource> resourceOptional = getPublisherResource(publisherName);
+        Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60004",
-                    "Moesif publisher not found: " + publisherName,
+                    "Moesif publisher not found: " + MOESIF_PUBLISHER_NAME,
                     "No Moesif publisher exists with the given name.");
         }
 
         try {
             MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
-                    .deleteResource(MOESIF_PUBLISHER_RESOURCE_TYPE, publisherName);
+                    .deleteResource(MOESIF_PUBLISHER_RESOURCE_TYPE, MOESIF_PUBLISHER_NAME);
         } catch (ConfigurationManagementException e) {
-            throw handleConfigurationMgtException(e, "Error while deleting Moesif publisher: " + publisherName);
+            throw handleConfigurationMgtException(e, "Error while deleting Moesif publisher: " +
+                    MOESIF_PUBLISHER_NAME);
         }
 
         try {
             MoesifSecretProcessor.deleteSecrets(MoesifConfigurationConstants.MOESIF_SECRET_PROVIDER,
                     API_KEY_AUTH_TYPE, API_KEY_VALUE);
         } catch (SecretManagementException e) {
-            log.error("Failed to delete Moesif API key secret for publisher: " + publisherName
+            log.error("Failed to delete Moesif API key secret for publisher: " + MOESIF_PUBLISHER_NAME
                     + ". The secret may need to be cleaned up manually.", e);
         }
 

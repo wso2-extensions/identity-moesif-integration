@@ -36,22 +36,20 @@ public interface MoesifConfigurationManagementService {
      * hardcoded defaults. The Moesif portal API token used for generating dashboard-viewer
      * id_tokens is read directly from the IS server configuration via SecureVault.
      *
-     * @param name        Publisher name (unique identifier).
      * @param apiKeyValue Plain-text Moesif collector API key (app_token).
      * @return Created Moesif publisher DTO (contains only the name; secrets are not returned).
      * @throws MoesifConfigurationManagementException If an error occurs while creating the publisher.
      */
-    MoesifPublisherDTO addMoesifPublisher(String name, String apiKeyValue)
+    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue)
             throws MoesifConfigurationManagementException;
 
     /**
      * Retrieve a Moesif event publisher configuration by name.
      *
-     * @param publisherName Publisher name.
      * @return Moesif publisher configuration.
      * @throws MoesifConfigurationManagementException If an error occurs while retrieving the publisher.
      */
-    MoesifPublisherDTO getMoesifPublisher(String publisherName) throws MoesifConfigurationManagementException;
+    MoesifPublisherDTO getMoesifPublisher() throws MoesifConfigurationManagementException;
 
     /**
      * Retrieve all Moesif event publisher configurations for the tenant.
@@ -64,19 +62,17 @@ public interface MoesifConfigurationManagementService {
     /**
      * Update the API key for an existing Moesif event publisher and redeploy it.
      *
-     * @param name        Publisher name.
      * @param apiKeyValue New plain-text Moesif API key value.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
      */
-    MoesifPublisherDTO updateMoesifPublisherApiKey(String name, String apiKeyValue)
+    MoesifPublisherDTO updateMoesifPublisherApiKey(String apiKeyValue)
             throws MoesifConfigurationManagementException;
 
     /**
      * Delete a Moesif event publisher configuration by name.
      *
-     * @param publisherName Publisher name.
      * @throws MoesifConfigurationManagementException If an error occurs while deleting the publisher.
      */
-    void deleteMoesifPublisher(String publisherName) throws MoesifConfigurationManagementException;
+    void deleteMoesifPublisher() throws MoesifConfigurationManagementException;
 }
