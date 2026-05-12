@@ -42,9 +42,9 @@ public class MoesifCommonConstants {
     public static final String MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY =
             "moesif.flow.publisher.enable";
 
-    /** Enables or disables the OAuth token (org-switch) event publisher per tenant. */
-    public static final String MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY =
-            "moesif.oAuthToken.publisher.enable";
+    /** Enables or disables (org-switch) event publisher per tenant. */
+    public static final String MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.orgSwitch.publisher.enable";
 
     private MoesifCommonConstants() {
 

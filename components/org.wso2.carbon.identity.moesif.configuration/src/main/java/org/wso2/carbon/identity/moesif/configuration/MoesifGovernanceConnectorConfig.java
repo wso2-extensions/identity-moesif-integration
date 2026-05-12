@@ -81,8 +81,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
                 "Enable Registration Publisher");
         nameMapping.put(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
                 "Enable Flow Publisher");
-        nameMapping.put(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY,
-                "Enable OAuth Token Publisher");
+        nameMapping.put(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
+                "Enable Org Switch Publisher");
         return nameMapping;
     }
 
@@ -96,8 +96,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
                 "Enable or disable Moesif user registration event publishing for this tenant.");
         descriptionMapping.put(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
                 "Enable or disable Moesif flow event publishing for this tenant.");
-        descriptionMapping.put(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY,
-                "Enable or disable Moesif OAuth Token event publishing for this tenant.");
+        descriptionMapping.put(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
+                "Enable or disable Moesif Org Switch event publishing for this tenant.");
         return descriptionMapping;
     }
 
@@ -108,7 +108,7 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
                 MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
                 MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
-                MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY,
+                MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
         };
     }
 
@@ -122,7 +122,7 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
                 Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
-        defaultValues.put(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY,
+        defaultValues.put(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
         return defaultValues;
     }
@@ -138,7 +138,7 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
                 Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
-        defaultValues.put(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY,
+        defaultValues.put(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
         return defaultValues;
     }

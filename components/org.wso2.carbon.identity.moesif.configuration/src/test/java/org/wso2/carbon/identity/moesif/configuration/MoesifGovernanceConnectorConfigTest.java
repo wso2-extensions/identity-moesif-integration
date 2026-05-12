@@ -41,7 +41,7 @@ public class MoesifGovernanceConnectorConfigTest {
             MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
             MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
             MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
-            MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY
+            MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY
     };
 
     @BeforeClass
@@ -125,8 +125,8 @@ public class MoesifGovernanceConnectorConfigTest {
                 "Enable Registration Publisher");
         assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY),
                 "Enable Flow Publisher");
-        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY),
-                "Enable OAuth Token Publisher");
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY),
+                "Enable Org Switch Publisher");
     }
 
     @Test

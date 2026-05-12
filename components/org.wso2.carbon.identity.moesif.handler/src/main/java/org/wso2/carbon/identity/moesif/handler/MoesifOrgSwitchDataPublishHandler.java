@@ -184,7 +184,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
             if (Boolean.parseBoolean(handlerEnabled)) {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
                 return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
+                        MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY);
             }
         }
         return false;
