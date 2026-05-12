@@ -1,0 +1,82 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifFlowData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "flowType",
+      "type": "STRING"
+    },
+    {
+      "name": "stepType",
+      "type": "STRING"
+    },
+    {
+      "name": "currentNodeId",
+      "type": "STRING"
+    },
+    {
+      "name" : "currentNodeType",
+      "type" : "MAP"
+    },
+    {
+      "name": "flowId",
+      "type": "MAP"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "nodeResponseStatus",
+      "type": "STRING"
+    },
+    {
+      "name": "nodeResponseType",
+      "type": "STRING"
+    },
+    {
+      "name": "applicationId",
+      "type": "STRING"
+    },
+    {
+      "name": "executerName",
+      "type": "STRING"
+    },
+    {
+      "name": "organizationId",
+      "type": "STRING"
+    },
+    {
+      "name": "isOrganizationLogin",
+      "type": "BOOL"
+    },
+    {
+      "name": "publishTimestamp",
+      "type": "STRING"
+    },
+    {
+      "name": "errorCode",
+      "type": "STRING"
+    }
+  ]
+}
