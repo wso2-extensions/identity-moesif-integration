@@ -289,7 +289,14 @@ public class MoesifHTTPEventAdapterTest {
 
         TestableAdapter() {
 
-            super(new OutputEventAdapterConfiguration(), new HashMap<>());
+            super(buildAdapterConfig(), new HashMap<>());
+        }
+
+        private static OutputEventAdapterConfiguration buildAdapterConfig() {
+
+            OutputEventAdapterConfiguration config = new OutputEventAdapterConfiguration();
+            config.setStaticProperties(new HashMap<>());
+            return config;
         }
 
         String callBuildBody(Object message) {
