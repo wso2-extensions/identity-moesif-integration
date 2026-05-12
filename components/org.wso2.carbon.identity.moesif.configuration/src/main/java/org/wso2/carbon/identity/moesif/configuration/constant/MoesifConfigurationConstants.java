@@ -35,7 +35,7 @@ public class MoesifConfigurationConstants {
     public static final String STREAM_NAME_CONFIG = "Analytics.Moesif.StreamName";
     public static final String STREAM_VERSION_CONFIG = "Analytics.Moesif.StreamVersion";
     public static final String INLINE_BODY_CONFIG = "Analytics.Moesif.InlineBody";
-
+    public static final String ENABLED_CONFIG = "Analytics.Moesif.Enabled";
     private MoesifConfigurationConstants() {
 
     }

@@ -124,28 +124,26 @@ public class MoesifConfigurationErrorConstants {
                 "Missing required configuration: " + MoesifConfigurationConstants.STREAM_VERSION_CONFIG,
                 "The property '" + MoesifConfigurationConstants.STREAM_VERSION_CONFIG
                         + "' must be set in deployment.toml under [analytics.moesif]."),
-        ERROR_MISSING_INLINE_BODY(
-                "MOESIF_65015",
-                "Missing required configuration: " + MoesifConfigurationConstants.INLINE_BODY_CONFIG,
-                "The property '" + MoesifConfigurationConstants.INLINE_BODY_CONFIG
-                        + "' must be set in deployment.toml under [analytics.moesif]."),
         ERROR_DELETING_API_KEY_SECRET(
-                "MOESIF_65016",
+                "MOESIF_65015",
                 "Failed to delete Moesif API key secret for publisher: %s. " +
                         "The secret may need to be cleaned up manually.",
                 "An error occurred while deleting the Moesif API key secret from the secret manager."),
         ERROR_REDEPLOYING_PUBLISHER_CONFIG(
-                "MOESIF_65017",
+                "MOESIF_65016",
                 "Error re-deploying Moesif event publisher configuration: %s",
                 "An error occurred while re-deploying the event publisher configuration."),
         ERROR_UPDATING_GOVERNANCE_CONFIG(
-                "MOESIF_65018",
+                "MOESIF_65017",
                 "Failed to update Moesif governance properties for tenant: %s",
                 "An error occurred while updating the Moesif governance configuration properties."),
         ERROR_READING_GOVERNANCE_CONFIG(
-                "MOESIF_65019",
+                "MOESIF_65018",
                 "Failed to read Moesif governance properties for tenant: %s",
-                "An error occurred while reading the Moesif governance configuration properties.");
+                "An error occurred while reading the Moesif governance configuration properties."),
+        ERROR_MOESIF_DISABLED("MOESIF_65019",
+                "Moesif analytics is disabled.",
+                "The Moesif analytics publisher is currently disabled.");
 
         private final String code;
         private final String message;
