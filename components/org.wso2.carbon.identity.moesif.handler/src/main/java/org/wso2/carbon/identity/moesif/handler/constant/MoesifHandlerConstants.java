@@ -54,14 +54,10 @@ public class MoesifHandlerConstants {
     public static final String FLOW_TYPE_REGISTRATION = "REGISTRATION";
     public static final String FLOW_TYPE_PASSWORD_RECOVERY = "PASSWORD_RECOVERY";
 
-    /**
-     * Event name for user registration events.
-     */
+    /** Event name for user registration events. */
     public static final String POST_ADD_USER = "POST_ADD_USER";
 
-    /**
-     * Tenant domain names property key used to resolve publishing domains.
-     */
+    /** Tenant domain names property key used to resolve publishing domains. */
     public static final String TENANT_DOMAIN_NAMES = "tenantDomainNames";
 
     /**
@@ -92,6 +88,17 @@ public class MoesifHandlerConstants {
     public static final String TIME = "time";
 
     public static final String FIELD_IDENTIFIED_USER_ID = "identifiedUserId";
+
+    public static final String ORG_SWITCH_PUBLISHER_NAME = "moesifOrgSwitchPublisher";
+    public static final String ORG_SWITCH_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifOrgSwitchData:1.0.0";
+    public static final String ORG_SWITCH_PUBLISHER_ENABLED = "moesifOrgSwitchPublisher.enable";
+    public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
+    public static final String POST_ORGANIZATION_SWITCH_EVENT = "POST_ORGANIZATION_SWITCH_EVENT";
+    /** Event property key carrying the {@code OAuthTokenReqMessageContext}. */
+    public static final String OAUTH_TOKEN_REQ_MESSAGE_CONTEXT = "OAUTH_TOKEN_REQ_MESSAGE_CONTEXT";
+    /** Property key under which the {@code OAuthAppDO} is stored in the token-request context. */
+    public static final String OAUTH_APP_DO_PROPERTY = "OAuthAppDO";
 
     public enum UserOnboardedMethod {
 

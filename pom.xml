@@ -286,6 +286,7 @@
         <!-- P2 Feature -->
         <carbon.p2.plugin.version>1.5.3</carbon.p2.plugin.version>
         <carbon.kernel.feature.version>4.5.0</carbon.kernel.feature.version>
+        <identity.inbound.auth.oauth.import.version.range>[6.7.0, 8.0.0)</identity.inbound.auth.oauth.import.version.range>
         <!-- Build -->
         <maven.buildnumber.plugin.version>1.4</maven.buildnumber.plugin.version>
         <!-- Test -->
