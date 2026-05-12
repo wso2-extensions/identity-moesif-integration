@@ -6,5 +6,6 @@
     <mapping customMapping="disable" type="json" />
     <to eventAdapterType="moesif-http">
         <property name="http.client.method">httpPost</property>
+        <property name="http.url"></property>
     </to>
 </eventPublisher>
