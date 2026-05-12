@@ -26,21 +26,23 @@ import org.wso2.carbon.identity.base.IdentityRuntimeException;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.AnalyticsLoginDataPublishHandlerV110;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.AnalyticsLoginDataPublisherUtils;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.model.AuthenticationData;
-import org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants;
-import org.wso2.carbon.identity.data.publisher.authentication.moesif.util.MoesifDataPublishUtils;
-import org.wso2.carbon.identity.data.publisher.authentication.moesif.internal.MoesifDataPublishDataHolder;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
+import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
+import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
+import org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 
 import java.util.Optional;
 
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.TENANT_DOMAIN_NAMES;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.USER_AUTHENTICATION_PUBLISHER_ENABLED;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.USER_AUTHENTICATION_PUBLISHER_NAME;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.USER_AUTHENTICATION_STREAM_NAME;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.util.MoesifDataPublishUtils.extractUserAgent;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TENANT_DOMAIN_NAMES;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_PUBLISHER_ENABLED;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_PUBLISHER_NAME;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_STREAM_NAME;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.extractUserAgent;
+
 
 /**
  * Event handler that publishes authentication login events to Moesif via the HTTP output event adapter.
@@ -89,14 +91,16 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                 for (String publishingDomain : publishingDomains) {
                     try {
                         FrameworkUtils.startTenantFlow(publishingDomain);
-                        String orgUuid = MoesifDataPublishDataHolder.getInstance().getOrganizationManager().resolveOrganizationId(publishingDomain);
-                        Object[] metadataArray = MoesifDataPublishUtils.getMetaDataArray(orgUuid,
-                                MoesifDataPublishConstants.ACTION_NAME_USER_AUTHENTICATION, authenticationData.getUserId(), userAgent.orElse(MoesifDataPublishConstants.NOT_AVAILABLE));
+                        String orgUuid = MoesifHandlerDataHolder.getInstance().getOrganizationManager()
+                                .resolveOrganizationId(publishingDomain);
+                        Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid,
+                                MoesifHandlerConstants.ACTION_NAME_USER_AUTHENTICATION, authenticationData.getUserId(),
+                                userAgent.orElse(MoesifHandlerConstants.NOT_AVAILABLE));
 
                         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                                 new org.wso2.carbon.databridge.commons.Event(
                                         USER_AUTHENTICATION_STREAM_NAME, System.currentTimeMillis(), metadataArray, null, payloadData);
-                        MoesifDataPublishDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
+                        MoesifHandlerDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
 
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Published Moesif login event for domain: " + publishingDomain);
@@ -122,7 +126,8 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                     .getProperty(USER_AUTHENTICATION_PUBLISHER_ENABLED);
             if (Boolean.parseBoolean(handlerEnabled)) {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifDataPublishUtils.isMoesifEnabledForPrimaryTenant(tenantDomain);
+                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
+                        MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
             }
         }
         return false;

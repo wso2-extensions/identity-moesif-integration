@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.moesif.configuration;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
-import org.wso2.carbon.identity.moesif.configuration.constant.MoesifConfigurationConstants;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
 
 import java.util.Map;
 import java.util.Properties;
@@ -36,6 +36,13 @@ import static org.testng.Assert.assertTrue;
 public class MoesifGovernanceConnectorConfigTest {
 
     private MoesifGovernanceConnectorConfig connectorConfig;
+
+    private static final String[] HANDLER_PROPERTY_KEYS = new String[]{
+            MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+            MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+            MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
+            MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY
+    };
 
     @BeforeClass
     public void setUp() {
@@ -78,8 +85,10 @@ public class MoesifGovernanceConnectorConfigTest {
 
         String[] propertyNames = connectorConfig.getPropertyNames();
         assertNotNull(propertyNames);
-        assertEquals(propertyNames.length, 1);
-        assertEquals(propertyNames[0], MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY);
+        assertEquals(propertyNames.length, 4);
+        for (String key : HANDLER_PROPERTY_KEYS) {
+            assertTrue(java.util.Arrays.asList(propertyNames).contains(key));
+        }
     }
 
     @Test
@@ -87,18 +96,21 @@ public class MoesifGovernanceConnectorConfigTest {
 
         Properties defaults = connectorConfig.getDefaultPropertyValues("carbon.super");
         assertNotNull(defaults);
-        assertTrue(defaults.containsKey(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY));
-        assertEquals(defaults.getProperty(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY), "false");
+        for (String key : HANDLER_PROPERTY_KEYS) {
+            assertTrue(defaults.containsKey(key));
+            assertEquals(defaults.getProperty(key), "false");
+        }
     }
 
     @Test
     public void testGetDefaultPropertyValuesWithNames() throws IdentityGovernanceException {
 
-        Map<String, String> defaults = connectorConfig.getDefaultPropertyValues(
-                new String[]{MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY}, "carbon.super");
+        Map<String, String> defaults = connectorConfig.getDefaultPropertyValues(HANDLER_PROPERTY_KEYS, "carbon.super");
         assertNotNull(defaults);
-        assertTrue(defaults.containsKey(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY));
-        assertEquals(defaults.get(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY), "false");
+        for (String key : HANDLER_PROPERTY_KEYS) {
+            assertTrue(defaults.containsKey(key));
+            assertEquals(defaults.get(key), "false");
+        }
     }
 
     @Test
@@ -106,9 +118,15 @@ public class MoesifGovernanceConnectorConfigTest {
 
         Map<String, String> nameMapping = connectorConfig.getPropertyNameMapping();
         assertNotNull(nameMapping);
-        assertTrue(nameMapping.containsKey(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY));
-        assertEquals(nameMapping.get(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY),
-                "Enable Moesif Publisher");
+        assertEquals(nameMapping.size(), 4);
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY),
+                "Enable Authentication Publisher");
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY),
+                "Enable Registration Publisher");
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY),
+                "Enable Flow Publisher");
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY),
+                "Enable OAuth Token Publisher");
     }
 
     @Test
@@ -116,6 +134,8 @@ public class MoesifGovernanceConnectorConfigTest {
 
         Map<String, String> descriptionMapping = connectorConfig.getPropertyDescriptionMapping();
         assertNotNull(descriptionMapping);
-        assertTrue(descriptionMapping.containsKey(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY));
+        for (String key : HANDLER_PROPERTY_KEYS) {
+            assertTrue(descriptionMapping.containsKey(key));
+        }
     }
 }

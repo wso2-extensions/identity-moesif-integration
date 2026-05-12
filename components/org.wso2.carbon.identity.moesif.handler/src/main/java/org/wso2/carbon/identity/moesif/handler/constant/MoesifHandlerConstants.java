@@ -38,11 +38,6 @@ public class MoesifHandlerConstants {
     public static final String USER_AUTHENTICATION_PUBLISHER_ENABLED = "moesifUserAuthenticationPublisher.enable";
     public static final String FLOW_PUBLISHER_ENABLED = "moesifFlowPublisher.enable";
 
-    /**
-     * Governance connector property key used to enable/disable Moesif publishing per tenant.
-     */
-    public static final String MOESIF_PUBLISHER_ENABLED_PROPERTY = "moesif.publisher.enabled";
-
     public static final String ACTION_NAME_USER_AUTHENTICATION = "User-Authentication";
     public static final String ACTION_NAME_USER_REGISTRATION = "User-Registration";
     public static final String ACTION_NAME_USER_REGISTRATION_FLOW = "User-Registration-Flow";

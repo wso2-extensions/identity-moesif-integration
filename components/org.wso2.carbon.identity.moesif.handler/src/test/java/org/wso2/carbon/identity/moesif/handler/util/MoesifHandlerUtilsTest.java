@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 
 import java.util.HashMap;
 import java.util.Map;

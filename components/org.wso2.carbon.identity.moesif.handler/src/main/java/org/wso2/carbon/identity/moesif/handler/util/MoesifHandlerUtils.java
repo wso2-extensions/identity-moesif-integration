@@ -27,12 +27,6 @@ import org.wso2.carbon.identity.application.common.model.Property;
 
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
-import org.wso2.carbon.identity.flow.execution.engine.model.FlowEventContext;
-import org.wso2.carbon.identity.flow.execution.engine.model.FlowExecutionStep;
-import org.wso2.carbon.identity.flow.execution.engine.model.NodeResponse;
-
-import org.wso2.carbon.identity.flow.mgt.model.ExecutorDTO;
-import org.wso2.carbon.identity.flow.mgt.model.NodeConfig;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
 import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
@@ -252,16 +246,18 @@ public class MoesifHandlerUtils {
     }
 
     /**
-     * Checks whether Moesif publishing is enabled for the primary (root) organisation that owns
-     * the given tenant domain.
+     * Checks whether a specific Moesif handler is enabled for the primary (root) organisation that owns
+     * the given tenant domain by reading the per-handler governance connector property.
      *
      * <p>The method resolves the org hierarchy upward to the primary organisation and then reads
-     * the {@code moesif.publisher.enabled} governance connector property for that tenant.</p>
+     * the supplied {@code governancePropertyKey} for that tenant.</p>
      *
-     * @param tenantDomain tenant domain of the current sub-organisation
+     * @param tenantDomain        tenant domain of the current sub-organisation
+     * @param governancePropertyKey the governance connector property key for the specific handler
+     *                            (e.g. {@code MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY})
      * @return {@code true} only when the governance property is explicitly set to {@code "true"}
      */
-    public static boolean isMoesifEnabledForPrimaryTenant(String tenantDomain) {
+    public static boolean isHandlerEnabledForPrimaryTenant(String tenantDomain, String governancePropertyKey) {
 
         try {
             String primaryOrgTenantDomain = tenantDomain;
@@ -270,9 +266,7 @@ public class MoesifHandlerUtils {
                         .getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
             }
             Property[] properties = MoesifHandlerDataHolder.getInstance().getIdentityGovernanceService()
-                    .getConfiguration(
-                            new String[]{MoesifHandlerConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY},
-                            primaryOrgTenantDomain);
+                    .getConfiguration(new String[]{governancePropertyKey}, primaryOrgTenantDomain);
             return properties != null && properties.length > 0
                     && Boolean.parseBoolean(properties[0].getValue());
         } catch (OrganizationManagementException | IdentityGovernanceException e) {
