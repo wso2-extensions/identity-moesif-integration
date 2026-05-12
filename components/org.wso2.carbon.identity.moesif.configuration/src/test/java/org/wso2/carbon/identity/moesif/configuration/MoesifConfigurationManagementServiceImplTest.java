@@ -68,13 +68,13 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherBlankApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher("");
+        service.addMoesifPublisher("", null);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherNullApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher(null);
+        service.addMoesifPublisher(null, null);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
@@ -82,7 +82,7 @@ public class MoesifConfigurationManagementServiceImplTest {
 
         when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(PUBLISHER_NAME)))
                 .thenReturn(buildResource(PUBLISHER_NAME));
-        service.addMoesifPublisher("apiKey");
+        service.addMoesifPublisher("apiKey", null);
     }
 
     // ── getMoesifPublisher ────────────────────────────────────────────────────
@@ -149,20 +149,20 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyBlankKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.updateMoesifPublisherApiKey("");
+        service.updateMoesifPublisher("", null);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNullKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.updateMoesifPublisherApiKey(null);
+        service.updateMoesifPublisher(null, null);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNotFoundThrows() throws Exception {
 
         stubResourceNotFound(PUBLISHER_NAME);
-        service.updateMoesifPublisherApiKey("newKey");
+        service.updateMoesifPublisher("newKey", null);
     }
 
     // ── deleteMoesifPublisher ─────────────────────────────────────────────────

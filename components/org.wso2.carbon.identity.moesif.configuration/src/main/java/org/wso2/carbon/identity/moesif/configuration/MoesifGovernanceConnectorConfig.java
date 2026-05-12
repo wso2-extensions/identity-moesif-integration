@@ -77,6 +77,12 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
         Map<String, String> nameMapping = new HashMap<>();
         nameMapping.put(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY,
                 "Enable Moesif Publisher");
+        nameMapping.put(MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+                "Enable Login Publisher");
+        nameMapping.put(MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+                "Enable Registration Publisher");
+        nameMapping.put(MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
+                "Enable Flow Publisher");
         return nameMapping;
     }
 
@@ -86,13 +92,24 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
         Map<String, String> descriptionMapping = new HashMap<>();
         descriptionMapping.put(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY,
                 "Enable or disable Moesif event publishing for this tenant.");
+        descriptionMapping.put(MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+                "Enable or disable Moesif login/authentication event publishing for this tenant.");
+        descriptionMapping.put(MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+                "Enable or disable Moesif user registration event publishing for this tenant.");
+        descriptionMapping.put(MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
+                "Enable or disable Moesif flow event publishing for this tenant.");
         return descriptionMapping;
     }
 
     @Override
     public String[] getPropertyNames() {
 
-        return new String[]{MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY};
+        return new String[]{
+                MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY,
+                MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+                MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+                MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY
+        };
     }
 
     @Override
@@ -100,6 +117,12 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
 
         Properties defaultValues = new Properties();
         defaultValues.put(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY, Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
         return defaultValues;
     }
 
@@ -109,6 +132,12 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
 
         Map<String, String> defaultValues = new HashMap<>();
         defaultValues.put(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY, Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
+        defaultValues.put(MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
+                Boolean.FALSE.toString());
         return defaultValues;
     }
 }

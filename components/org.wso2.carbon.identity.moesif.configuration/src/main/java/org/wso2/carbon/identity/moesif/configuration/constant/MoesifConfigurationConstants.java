@@ -27,6 +27,18 @@ public class MoesifConfigurationConstants {
 
     public static final String MOESIF_PUBLISHER_ENABLED_PROPERTY = "moesif.publisher.enabled";
 
+    public static final String MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.authentication.publisher.enable";
+
+    public static final String MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.registration.publisher.enable";
+
+    public static final String MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.flow.publisher.enable";
+
+    public static final String MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.oAuthToken.publisher.enable";
+
     private MoesifConfigurationConstants() {
 
     }

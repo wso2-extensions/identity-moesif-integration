@@ -41,7 +41,9 @@ import org.wso2.carbon.identity.tenant.resource.manager.exception.TenantResource
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,14 +87,42 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     private static final String MOESIF_PUBLISHER_NAME = "moesifPublisher";
     private static final String PUBLISHER_STREAM = "org.wso2.is.analytics.stream.MoesifData";
 
+    /**
+     * Ordered map of publisher type key → governance property constant.
+     * To support a new handler type, add a constant to MoesifConfigurationConstants
+     * and add a single entry here — no other changes needed.
+     */
+    private static final Map<String, String> PUBLISHER_TYPE_PROPERTY_MAP;
+
+    static {
+        Map<String, String> m = new LinkedHashMap<>();
+        m.put("moesif-authentication-publisher", MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-registration-publisher", MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-flow-publisher", MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-oauth2-token-publisher", MoesifConfigurationConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
+        PUBLISHER_TYPE_PROPERTY_MAP = Collections.unmodifiableMap(m);
+    }
+
     @Override
-    public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue)
+    public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
             throws MoesifConfigurationManagementException {
 
         if (StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60001",
                     "Invalid input: API key value is required.",
                     "API key value cannot be empty.");
+        }
+
+        if (publisherTypes != null && !publisherTypes.isEmpty()) {
+            List<String> unsupportedKeys = publisherTypes.keySet().stream()
+                    .filter(key -> !PUBLISHER_TYPE_PROPERTY_MAP.containsKey(key))
+                    .toList();
+            if (!unsupportedKeys.isEmpty()) {
+                throw new MoesifConfigurationManagementClientException("MOESIF_60005",
+                        "Invalid publisher type(s): " + unsupportedKeys + ". Supported types are: "
+                                + PUBLISHER_TYPE_PROPERTY_MAP.keySet() + ".",
+                        "The request contains publisher type keys that are not supported.");
+            }
         }
 
         Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
@@ -118,7 +148,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
                     .addResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
             reDeployEventPublisherConfiguration(resource);
-            updateMoesifEnabledGovernanceConfig(Boolean.TRUE.toString());
+            Map<String, Boolean> resolved = publisherTypes != null ? publisherTypes : Collections.emptyMap();
+            updateAllGovernanceConfigs(resolved);
             MoesifPublisherDTO result = new MoesifPublisherDTO();
             result.setName(MOESIF_PUBLISHER_NAME);
             return result;
@@ -138,7 +169,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     "Moesif publisher not found: " + MOESIF_PUBLISHER_NAME,
                     "No Moesif publisher exists with the given name.");
         }
-        return buildMoesifPublisherFromResource(resourceOptional.get());
+        MoesifPublisherDTO dto = buildMoesifPublisherFromResource(resourceOptional.get());
+        populateGovernanceConfigsIntoDto(dto);
+        return dto;
     }
 
     @Override
@@ -162,18 +195,25 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     }
 
     @Override
-    public MoesifPublisherDTO updateMoesifPublisherApiKey(String apiKeyValue)
+    public MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
             throws MoesifConfigurationManagementException {
 
-        if (StringUtils.isBlank(MOESIF_PUBLISHER_NAME)) {
-            throw new MoesifConfigurationManagementClientException("MOESIF_60001",
-                    "Invalid input: publisher name is required.",
-                    "Publisher name cannot be empty.");
-        }
         if (StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException("MOESIF_60001",
                     "Invalid input: API key value is required.",
                     "API key value cannot be empty.");
+        }
+
+        if (publisherTypes != null && !publisherTypes.isEmpty()) {
+            List<String> unsupportedKeys = publisherTypes.keySet().stream()
+                    .filter(key -> !PUBLISHER_TYPE_PROPERTY_MAP.containsKey(key))
+                    .toList();
+            if (!unsupportedKeys.isEmpty()) {
+                throw new MoesifConfigurationManagementClientException("MOESIF_60005",
+                        "Invalid publisher type(s): " + unsupportedKeys + ". Supported types are: "
+                                + PUBLISHER_TYPE_PROPERTY_MAP.keySet() + ".",
+                        "The request contains publisher type keys that are not supported.");
+            }
         }
 
         Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
@@ -199,7 +239,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
                     .replaceResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
             reDeployEventPublisherConfiguration(resource);
-            updateMoesifEnabledGovernanceConfig(Boolean.TRUE.toString());
+            Map<String, Boolean> resolved = publisherTypes != null ? publisherTypes : Collections.emptyMap();
+            updateAllGovernanceConfigs(resolved);
             MoesifPublisherDTO result = new MoesifPublisherDTO();
             result.setName(MOESIF_PUBLISHER_NAME);
             return result;
@@ -235,7 +276,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     + ". The secret may need to be cleaned up manually.", e);
         }
 
-        updateMoesifEnabledGovernanceConfig(Boolean.FALSE.toString());
+        updateAllGovernanceConfigs(Collections.emptyMap());
     }
 
     private Resource buildResourceFromMoesifPublisher(MoesifPublisherDTO moesifPublisher)
@@ -395,18 +436,50 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         return new MoesifConfigurationManagementServerException("MOESIF_65003", message, e.getMessage(), e);
     }
 
-    private void updateMoesifEnabledGovernanceConfig(String enabled) {
+    private void updateAllGovernanceConfigs(Map<String, Boolean> publisherTypes) {
 
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         Map<String, String> configProperties = new HashMap<>();
-        configProperties.put(MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY, enabled);
+
+        // Iterate all known publisher type keys — keys absent from publisherTypes default to false.
+        for (Map.Entry<String, String> entry : PUBLISHER_TYPE_PROPERTY_MAP.entrySet()) {
+            boolean enabled = Boolean.TRUE.equals(publisherTypes.get(entry.getKey()));
+            configProperties.put(entry.getValue(), String.valueOf(enabled));
+        }
         try {
             MoesifConfigurationDataHolder.getInstance().getIdentityGovernanceService()
                     .updateConfiguration(tenantDomain, configProperties);
         } catch (IdentityGovernanceException e) {
-            log.error("Failed to update Moesif governance property '"
-                    + MoesifConfigurationConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY
-                    + "' to '" + enabled + "' for tenant: " + tenantDomain, e);
+            log.error("Failed to update Moesif governance properties for tenant: " + tenantDomain, e);
+        }
+    }
+
+    private void populateGovernanceConfigsIntoDto(MoesifPublisherDTO dto) {
+
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        try {
+            String[] propertyNames = PUBLISHER_TYPE_PROPERTY_MAP.values().toArray(new String[0]);
+            org.wso2.carbon.identity.application.common.model.Property[] properties =
+                    MoesifConfigurationDataHolder.getInstance().getIdentityGovernanceService()
+                            .getConfiguration(propertyNames, tenantDomain);
+            if (properties == null) {
+                return;
+            }
+            // Build a reverse map: governance property name → publisher type key
+            Map<String, String> propertyToTypeKey = new HashMap<>();
+            for (Map.Entry<String, String> entry : PUBLISHER_TYPE_PROPERTY_MAP.entrySet()) {
+                propertyToTypeKey.put(entry.getValue(), entry.getKey());
+            }
+            Map<String, Boolean> publisherTypes = new LinkedHashMap<>();
+            for (org.wso2.carbon.identity.application.common.model.Property prop : properties) {
+                String typeKey = propertyToTypeKey.get(prop.getName());
+                if (typeKey != null) {
+                    publisherTypes.put(typeKey, Boolean.parseBoolean(prop.getValue()));
+                }
+            }
+            dto.setPublisherTypes(publisherTypes);
+        } catch (IdentityGovernanceException e) {
+            log.error("Failed to read Moesif governance properties for tenant: " + tenantDomain, e);
         }
     }
 }
