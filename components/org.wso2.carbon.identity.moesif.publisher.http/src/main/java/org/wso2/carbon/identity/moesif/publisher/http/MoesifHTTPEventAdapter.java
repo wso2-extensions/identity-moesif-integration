@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.codehaus.stax2.XMLStreamLocation2.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
+
 /**
  * Moesif-specific HTTP event adapter that re-shapes the published event JSON to match the Moesif events API contract.
  *
@@ -53,7 +56,6 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
 
     private static final Log LOG = LogFactory.getLog(MoesifHTTPEventAdapter.class);
 
-    private static final String NOT_AVAILABLE = "NOT_AVAILABLE";
     private static final String USER_AGENT_HEADER = "User-Agent";
 
     private static final String META_DATA_FIELD = "metaData";

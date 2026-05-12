@@ -44,8 +44,6 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_PASSWORD_RECOVERY_FLOW = "Password-Recovery-Flow";
     public static final String ACTION_NAME_FLOW_DEFAULT = "-Flow";
 
-    public static final String NOT_AVAILABLE = "NOT_AVAILABLE";
-
     public static final String FLOW_TYPE_REGISTRATION = "REGISTRATION";
     public static final String FLOW_TYPE_PASSWORD_RECOVERY = "PASSWORD_RECOVERY";
 

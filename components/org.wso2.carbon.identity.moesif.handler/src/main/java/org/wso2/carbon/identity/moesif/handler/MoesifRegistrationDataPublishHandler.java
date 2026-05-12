@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.moesif.handler;
 
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
@@ -39,8 +38,8 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 import java.util.Map;
 import java.util.Optional;
 
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_USER_REGISTRATION;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.POST_ADD_USER;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.REGISTRATION_STREAM_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_REGISTRATION_PUBLISHER_ENABLED;

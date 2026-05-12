@@ -30,9 +30,6 @@ public class MoesifCommonConstants {
     /** Sentinel value used in payloads when a field cannot be resolved. */
     public static final String NOT_AVAILABLE = "NOT_AVAILABLE";
 
-    // ── Governance connector property names ───────────────────────────────────
-    // These must match the keys returned by MoesifGovernanceConnectorConfig#getPropertyNames.
-
     /** Enables or disables the authentication (login) event publisher per tenant. */
     public static final String MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY =
             "moesif.authentication.publisher.enable";

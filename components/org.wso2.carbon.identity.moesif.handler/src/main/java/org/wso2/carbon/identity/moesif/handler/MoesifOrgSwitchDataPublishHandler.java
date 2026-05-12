@@ -40,8 +40,8 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 import java.time.Instant;
 import java.util.Map;
 
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_ORG_SWITCH;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_STREAM_NAME;

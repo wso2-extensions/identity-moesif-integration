@@ -95,7 +95,7 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                                 .resolveOrganizationId(publishingDomain);
                         Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid,
                                 MoesifHandlerConstants.ACTION_NAME_USER_AUTHENTICATION, authenticationData.getUserId(),
-                                userAgent.orElse(MoesifHandlerConstants.NOT_AVAILABLE));
+                                userAgent.orElse(MoesifCommonConstants.NOT_AVAILABLE));
 
                         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                                 new org.wso2.carbon.databridge.commons.Event(

@@ -28,7 +28,6 @@ import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
-import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
@@ -47,7 +46,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.ADMIN_INITIATED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.SELF_SIGNUP;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.USER_INVITE;
