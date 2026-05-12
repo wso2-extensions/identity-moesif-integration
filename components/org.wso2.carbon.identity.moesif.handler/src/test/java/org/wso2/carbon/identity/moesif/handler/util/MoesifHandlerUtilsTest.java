@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
 import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 
 import java.util.HashMap;
@@ -62,10 +63,10 @@ public class MoesifHandlerUtilsTest {
         Object[] meta = MoesifHandlerUtils.getMetaDataArray(null, null, null, null);
         assertNotNull(meta);
         assertEquals(meta.length, 4);
-        assertEquals(meta[0], MoesifHandlerConstants.NOT_AVAILABLE);
-        assertEquals(meta[1], MoesifHandlerConstants.NOT_AVAILABLE);
-        assertEquals(meta[2], MoesifHandlerConstants.NOT_AVAILABLE);
-        assertEquals(meta[3], MoesifHandlerConstants.NOT_AVAILABLE);
+        assertEquals(meta[0], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[2], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[3], MoesifCommonConstants.NOT_AVAILABLE);
     }
 
     @Test
@@ -73,9 +74,9 @@ public class MoesifHandlerUtilsTest {
 
         Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid", null, "user-42", null);
         assertEquals(meta[0], "org-uuid");
-        assertEquals(meta[1], MoesifHandlerConstants.NOT_AVAILABLE);
+        assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[2], "user-42");
-        assertEquals(meta[3], MoesifHandlerConstants.NOT_AVAILABLE);
+        assertEquals(meta[3], MoesifCommonConstants.NOT_AVAILABLE);
     }
 
     @Test
@@ -122,7 +123,7 @@ public class MoesifHandlerUtilsTest {
 
         Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(new HashMap<>(), null, null);
         for (int i = 0; i < 10; i++) {
-            assertEquals(payload[i], MoesifHandlerConstants.NOT_AVAILABLE,
+            assertEquals(payload[i], MoesifCommonConstants.NOT_AVAILABLE,
                     "Null field at index " + i + " should be NOT_AVAILABLE");
         }
         assertEquals(payload[10], null);

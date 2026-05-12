@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,7 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.codehaus.stax2.XMLStreamLocation2.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 
 /**
@@ -76,7 +76,7 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
     @Override
     protected String buildBody(Object message) {
 
-        JsonObject rawMessage = GSON.fromJson(message.toString(), JsonObject.class);
+        JsonObject rawMessage = parseAsJsonObject(message);
         JsonObject result = new JsonObject();
 
         if (rawMessage == null) {
@@ -131,7 +131,7 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
 
     private Optional<String> extractUserAgentFromMessage(Object message) {
 
-        JsonObject rawMessage = GSON.fromJson(message.toString(), JsonObject.class);
+        JsonObject rawMessage = parseAsJsonObject(message);
 
         if (rawMessage == null) {
             return Optional.empty();
@@ -150,5 +150,21 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
             }
         }
         return Optional.empty();
+    }
+
+    private JsonObject parseAsJsonObject(Object message) {
+
+        if (message == null) {
+            return null;
+        }
+        try {
+            JsonElement element = JsonParser.parseString(message.toString());
+            return element != null && element.isJsonObject() ? element.getAsJsonObject() : null;
+        } catch (RuntimeException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Failed to parse message payload as JSON object.", e);
+            }
+            return null;
+        }
     }
 }
