@@ -22,6 +22,7 @@ import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurati
 import org.wso2.carbon.identity.moesif.configuration.model.MoesifPublisherDTO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service interface for Moesif publisher configuration management operations.
@@ -36,11 +37,12 @@ public interface MoesifConfigurationManagementService {
      * hardcoded defaults. The Moesif portal API token used for generating dashboard-viewer
      * id_tokens is read directly from the IS server configuration via SecureVault.
      *
-     * @param apiKeyValue Plain-text Moesif collector API key (app_token).
+     * @param apiKeyValue    Plain-text Moesif collector API key (app_token).
+     * @param publisherTypes Publisher type keys (e.g. "login", "registration", "flow") to enabled flag.
      * @return Created Moesif publisher DTO (contains only the name; secrets are not returned).
      * @throws MoesifConfigurationManagementException If an error occurs while creating the publisher.
      */
-    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue)
+    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
             throws MoesifConfigurationManagementException;
 
     /**
@@ -60,13 +62,16 @@ public interface MoesifConfigurationManagementService {
     List<MoesifPublisherDTO> getMoesifPublishers() throws MoesifConfigurationManagementException;
 
     /**
-     * Update the API key for an existing Moesif event publisher and redeploy it.
+     * Update the API key and per-publisher-type enable flags for an existing Moesif event publisher.
+     * All governance configs are replaced with the provided values (replace-all semantics).
+     * Publisher type keys not present in {@code publisherTypes} default to {@code false}.
      *
-     * @param apiKeyValue New plain-text Moesif API key value.
+     * @param apiKeyValue    New plain-text Moesif API key value.
+     * @param publisherTypes Map of publisher type key (e.g. "login", "registration", "flow") to enabled flag.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
      */
-    MoesifPublisherDTO updateMoesifPublisherApiKey(String apiKeyValue)
+    MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
             throws MoesifConfigurationManagementException;
 
     /**

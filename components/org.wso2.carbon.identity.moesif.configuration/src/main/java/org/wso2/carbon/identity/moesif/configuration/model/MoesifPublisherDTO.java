@@ -34,6 +34,8 @@ public class MoesifPublisherDTO {
     private String streamVersion;
     private String inlineBody;
 
+    private Map<String, Boolean> publisherTypes = new HashMap<>();
+
     private Map<String, String> properties = new HashMap<>();
 
     public String getName() {
@@ -114,5 +116,15 @@ public class MoesifPublisherDTO {
     public void setProperties(Map<String, String> properties) {
 
         this.properties = properties;
+    }
+
+    public Map<String, Boolean> getPublisherTypes() {
+
+        return publisherTypes;
+    }
+
+    public void setPublisherTypes(Map<String, Boolean> publisherTypes) {
+
+        this.publisherTypes = publisherTypes;
     }
 }
