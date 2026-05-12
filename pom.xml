@@ -261,7 +261,7 @@
         <carbon.base.imp.pkg.version.range>[1.0.0, 2.0.0)</carbon.base.imp.pkg.version.range>
         <carbon.user.api.imp.pkg.version.range>[1.0.1, 2.0.0)</carbon.user.api.imp.pkg.version.range>
         <!-- Identity Framework -->
-        <carbon.identity.framework.version>7.11.30</carbon.identity.framework.version>
+        <carbon.identity.framework.version>7.11.78</carbon.identity.framework.version>
         <carbon.identity.framework.package.import.version.range>[5.14.67, 8.0.0)</carbon.identity.framework.package.import.version.range>
         <carbon.identity.framework.imp.pkg.version.range>[5.14.67, 8.0.0)</carbon.identity.framework.imp.pkg.version.range>
         <carbon.identity.package.import.version.range>[5.0.0, 8.0.0)</carbon.identity.package.import.version.range>
@@ -275,7 +275,7 @@
         <identity.organization.management.core.version>1.5.2</identity.organization.management.core.version>
         <identity.organization.management.core.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.organization.management.core.imp.pkg.version.range>
         <!-- Data Publisher -->
-        <identity.datapublisher.authentication.version>5.10.1</identity.datapublisher.authentication.version>
+        <identity.datapublisher.authentication.version>5.10.2</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>
         <!-- OSGi -->
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
