@@ -103,6 +103,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
             throws MoesifConfigurationManagementException {
 
+        validateIfMoesifEnabled();
         if (StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_API_KEY_REQUIRED.getCode(),
@@ -154,6 +155,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     public MoesifPublisherDTO getMoesifPublisher()
             throws MoesifConfigurationManagementException {
 
+        validateIfMoesifEnabled();
         Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
@@ -190,6 +192,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     public MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
             throws MoesifConfigurationManagementException {
 
+        validateIfMoesifEnabled();
         if (StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_API_KEY_REQUIRED.getCode(),
@@ -240,6 +243,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     @Override
     public void deleteMoesifPublisher() throws MoesifConfigurationManagementException {
 
+        validateIfMoesifEnabled();
         Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
@@ -312,12 +316,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_MISSING_STREAM_VERSION.getMessage(),
                     ErrorMessages.ERROR_MISSING_STREAM_VERSION.getDescription());
         }
-        if (inlineBody == null) {
-            throw new MoesifConfigurationManagementServerException(
-                    ErrorMessages.ERROR_MISSING_INLINE_BODY.getCode(),
-                    ErrorMessages.ERROR_MISSING_INLINE_BODY.getMessage(),
-                    ErrorMessages.ERROR_MISSING_INLINE_BODY.getDescription());
-        }
 
         MoesifPublisherDTO dto = new MoesifPublisherDTO();
         dto.setName(MOESIF_PUBLISHER_NAME);
@@ -325,7 +323,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         dto.setAuthType(authType);
         dto.setStreamName(streamName);
         dto.setStreamVersion(streamVersion);
-        dto.setInlineBody(inlineBody);
+        dto.setInlineBody(inlineBody == null ? "" : inlineBody);
         dto.setSecretProvider(MoesifConfigurationConstants.MOESIF_SECRET_PROVIDER);
         dto.getProperties().put(API_KEY_HEADER, apiKeyHeader);
         dto.getProperties().put(API_KEY_VALUE, apiKeyValue);
@@ -547,6 +545,18 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             dto.setPublisherTypes(publisherTypes);
         } catch (IdentityGovernanceException e) {
             log.error(String.format(ErrorMessages.ERROR_READING_GOVERNANCE_CONFIG.getMessage(), tenantDomain), e);
+        }
+    }
+
+
+    private void validateIfMoesifEnabled() throws MoesifConfigurationManagementServerException {
+
+        String enabled = IdentityUtil.getProperty(MoesifConfigurationConstants.ENABLED_CONFIG);
+        if (!Boolean.parseBoolean(enabled)) {
+            throw new MoesifConfigurationManagementServerException(
+                    ErrorMessages.ERROR_MOESIF_DISABLED.getCode(),
+                    ErrorMessages.ERROR_MOESIF_DISABLED.getMessage(),
+                    ErrorMessages.ERROR_MOESIF_DISABLED.getDescription());
         }
     }
 }
