@@ -75,12 +75,15 @@
                                     <directory>resources</directory>
                                     <includes>
                                         <include>p2.inf</include>
-                                        <include>Moesif-Publisher-MoesifUserAuthenticationData.xml</include>
-                                        <include>Moesif-Publisher-MoesifUserRegistrationData.xml</include>
-                                        <include>Moesif-Publisher-MoesifFlowData.xml</include>
+                                        <include>IsAnalytics-Publisher-moesif-MoesifUserAuthenticationData.xml</include>
+                                        <include>IsAnalytics-Publisher-moesif-MoesifFlowData.xml</include>
+                                        <include>IsAnalytics-Publisher-moesif-MoesifUserRegistrationData.xml</include>
+                                        <include>IsAnalytics-Publisher-moesif-MoesifOrgSwitchData.xml</include>
+
                                         <include>org.wso2.is.analytics.stream.MoesifUserAuthenticationData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifUserRegistrationData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifFlowData_1.0.0.json</include>
+                                        <include>org.wso2.is.analytics.stream.MoesifOrgSwitchData_1.0.0.json</include>
                                     </includes>
                                 </resource>
                             </resources>
