@@ -109,7 +109,7 @@ public class MoesifHandlerUtils {
         payload[1] = userStoreDomainName;
         payload[2] = tenantDomain;
         payload[3] = userOnboardedMethod;
-        payload[4] = orgId != null ? orgId : "";
+        payload[4] = orgId;
 
         return payload;
     }
@@ -153,6 +153,12 @@ public class MoesifHandlerUtils {
         return payloadData;
     }
 
+    /**
+     * Utility method to replace null or blank strings with a default "NOT_AVAILABLE" value for Moesif payloads.
+     *
+     * @param value The input string value to check.
+     * @return The original value if it's not null/blank, otherwise "NOT_AVAILABLE".
+     */
     public static String replaceIfStringNotAvailable(String value) {
 
         return value != null ? value : NOT_AVAILABLE;
@@ -217,6 +223,16 @@ public class MoesifHandlerUtils {
         return userOnboardedMethod;
     }
 
+    /**
+     * Build the metadata array for the Moesif event, ensuring that all required fields are populated
+     * and defaulting to "NOT_AVAILABLE" where data is missing.
+     *
+     * @param orgUuid    The organization UUID associated with the event.
+     * @param actionName The name of the action being performed (e.g. "UserAuthentication").
+     * @param userId     The ID of the user associated with the event, if applicable.
+     * @param userAgent  The User-Agent string from the HTTP request, if available.
+     * @return An Object array containing the metadata in the expected order for Moesif events.
+     */
     public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
         Object[] metaData = new Object[4];
 
@@ -228,6 +244,12 @@ public class MoesifHandlerUtils {
         return metaData;
     }
 
+    /**
+     * Extract the User-Agent header from the HTTP request associated with the event, if available.
+     *
+     * @param event The identity event containing the HTTP request as a property.
+     * @return An Optional containing the User-Agent string if it could be extracted, or empty if not available.
+     */
     public static Optional<String> extractUserAgent(Event event) {
 
         try {

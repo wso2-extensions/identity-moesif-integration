@@ -107,7 +107,6 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
             }
         }
 
-        // Add request.
         JsonObject request = new JsonObject();
         request.addProperty(TIME_FIELD, Instant.now().toString());
         result.add(REQUEST_FIELD, request);
