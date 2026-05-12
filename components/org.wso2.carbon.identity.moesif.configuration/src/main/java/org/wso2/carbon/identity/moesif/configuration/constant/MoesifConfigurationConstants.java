@@ -28,6 +28,14 @@ public class MoesifConfigurationConstants {
 
     public static final String MOESIF_SECRET_PROVIDER = "MOESIF_SECRET_PROVIDER";
 
+    // Configuration property keys (under [analytics.moesif] section in deployment.toml).
+    public static final String PROVIDER_URL_CONFIG = "Analytics.Moesif.ProviderURL";
+    public static final String AUTH_TYPE_CONFIG = "Analytics.Moesif.AuthType";
+    public static final String API_KEY_HEADER_CONFIG = "Analytics.Moesif.ApiKeyHeader";
+    public static final String STREAM_NAME_CONFIG = "Analytics.Moesif.StreamName";
+    public static final String STREAM_VERSION_CONFIG = "Analytics.Moesif.StreamVersion";
+    public static final String INLINE_BODY_CONFIG = "Analytics.Moesif.InlineBody";
+
     private MoesifConfigurationConstants() {
 
     }

@@ -38,11 +38,11 @@ public interface MoesifConfigurationManagementService {
      * id_tokens is read directly from the IS server configuration via SecureVault.
      *
      * @param apiKeyValue    Plain-text Moesif collector API key (app_token).
-     * @param publisherTypes Publisher type keys (e.g. "login", "registration", "flow") to enabled flag.
+     * @param eventPublisherEnablement Publisher type keys (e.g. "login", "registration", "flow") to enabled flag.
      * @return Created Moesif publisher DTO (contains only the name; secrets are not returned).
      * @throws MoesifConfigurationManagementException If an error occurs while creating the publisher.
      */
-    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
+    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
             throws MoesifConfigurationManagementException;
 
     /**
@@ -64,14 +64,14 @@ public interface MoesifConfigurationManagementService {
     /**
      * Update the API key and per-publisher-type enable flags for an existing Moesif event publisher.
      * All governance configs are replaced with the provided values (replace-all semantics).
-     * Publisher type keys not present in {@code publisherTypes} default to {@code false}.
+     * Publisher type keys not present in {@code eventPublisherEnablement} default to {@code false}.
      *
      * @param apiKeyValue    New plain-text Moesif API key value.
-     * @param publisherTypes Map of publisher type key (e.g. "login", "registration", "flow") to enabled flag.
+     * @param eventPublisherEnablement Map of publisher type key (e.g. "login", "registration", "flow") to enabled flag.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
      */
-    MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> publisherTypes)
+    MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
             throws MoesifConfigurationManagementException;
 
     /**
