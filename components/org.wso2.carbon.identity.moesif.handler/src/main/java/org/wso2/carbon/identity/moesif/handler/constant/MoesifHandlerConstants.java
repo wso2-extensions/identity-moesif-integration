@@ -42,6 +42,7 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_USER_REGISTRATION = "User-Registration";
     public static final String ACTION_NAME_USER_REGISTRATION_FLOW = "User-Registration-Flow";
     public static final String ACTION_NAME_PASSWORD_RECOVERY_FLOW = "Password-Recovery-Flow";
+    public static final String ACTION_NAME_INVITED_USER_REGISTRATION_FLOW = "Invited-User-Registration-Flow";
     public static final String ACTION_NAME_FLOW_DEFAULT = "-Flow";
 
     public static final String FLOW_TYPE_REGISTRATION = "REGISTRATION";
