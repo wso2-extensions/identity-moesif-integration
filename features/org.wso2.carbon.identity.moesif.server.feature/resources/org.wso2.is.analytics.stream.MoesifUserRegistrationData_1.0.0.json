@@ -1,0 +1,46 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifUserRegistrationFlowData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "userCreatedTime",
+      "type": "STRING"
+    },
+    {
+      "name": "userstoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name" : "userOnboardedMethod",
+      "type" : "STRING"
+    },
+    {
+      "name": "userResidingOrgId",
+      "type": "STRING"
+    }
+  ]
+}
