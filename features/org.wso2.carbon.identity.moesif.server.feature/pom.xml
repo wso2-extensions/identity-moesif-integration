@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.wso2.carbon.identity.moesif</groupId>
         <artifactId>identity-moesif-integration</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -35,6 +35,11 @@
         including configuration management, event handlers, and the HTTP output event adapter.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.moesif</groupId>
+            <artifactId>org.wso2.carbon.identity.moesif.common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.moesif</groupId>
             <artifactId>org.wso2.carbon.identity.moesif.configuration</artifactId>
@@ -103,6 +108,7 @@
                                 </properties>
                             </adviceFile>
                             <bundles>
+                                <bundleDef>org.wso2.carbon.identity.moesif:org.wso2.carbon.identity.moesif.common</bundleDef>
                                 <bundleDef>org.wso2.carbon.identity.moesif:org.wso2.carbon.identity.moesif.configuration</bundleDef>
                                 <bundleDef>org.wso2.carbon.identity.moesif:org.wso2.carbon.identity.moesif.handler</bundleDef>
                                 <bundleDef>org.wso2.carbon.identity.moesif:org.wso2.carbon.identity.moesif.publisher.http</bundleDef>

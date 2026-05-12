@@ -29,8 +29,8 @@ import org.wso2.carbon.identity.configuration.mgt.core.model.Resource;
 import org.wso2.carbon.identity.configuration.mgt.core.model.ResourceFile;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
 import org.wso2.carbon.identity.moesif.configuration.constant.MoesifConfigurationConstants;
-import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementClientException;
-import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementException;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
+import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementClientException;import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementException;
 import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementServerException;
 import org.wso2.carbon.identity.moesif.configuration.internal.MoesifConfigurationDataHolder;
 import org.wso2.carbon.identity.moesif.configuration.model.MoesifPublisherDTO;
@@ -96,10 +96,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
 
     static {
         Map<String, String> m = new LinkedHashMap<>();
-        m.put("moesif-authentication-publisher", MoesifConfigurationConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-registration-publisher", MoesifConfigurationConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-flow-publisher", MoesifConfigurationConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-oauth2-token-publisher", MoesifConfigurationConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-authentication-publisher", MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-registration-publisher", MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-flow-publisher", MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
+        m.put("moesif-oauth2-token-publisher", MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
         PUBLISHER_TYPE_PROPERTY_MAP = Collections.unmodifiableMap(m);
     }
 

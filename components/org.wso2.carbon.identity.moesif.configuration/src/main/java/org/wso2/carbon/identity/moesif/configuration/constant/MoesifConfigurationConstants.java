@@ -19,25 +19,14 @@
 package org.wso2.carbon.identity.moesif.configuration.constant;
 
 /**
- * Constants for Moesif configuration management.
+ * Constants specific to the Moesif configuration management module.
+ *
+ * <p>Governance connector property names and other cross-module constants are
+ * defined in {@code MoesifCommonConstants} in the {@code moesif.common} module.</p>
  */
 public class MoesifConfigurationConstants {
 
     public static final String MOESIF_SECRET_PROVIDER = "MOESIF_SECRET_PROVIDER";
-
-    public static final String MOESIF_PUBLISHER_ENABLED_PROPERTY = "moesif.publisher.enabled";
-
-    public static final String MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY =
-            "moesif.authentication.publisher.enable";
-
-    public static final String MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY =
-            "moesif.registration.publisher.enable";
-
-    public static final String MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY =
-            "moesif.flow.publisher.enable";
-
-    public static final String MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY =
-            "moesif.oAuthToken.publisher.enable";
 
     private MoesifConfigurationConstants() {
 

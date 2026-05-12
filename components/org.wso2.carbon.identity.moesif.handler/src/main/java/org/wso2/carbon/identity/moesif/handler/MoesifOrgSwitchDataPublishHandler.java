@@ -25,12 +25,14 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
-import org.wso2.carbon.identity.data.publisher.authentication.moesif.internal.MoesifDataPublishDataHolder;
-import org.wso2.carbon.identity.data.publisher.authentication.moesif.util.MoesifDataPublishUtils;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
+import org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
 import org.wso2.carbon.identity.organization.management.service.constant.OrganizationManagementConstants;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
@@ -38,11 +40,11 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 import java.time.Instant;
 import java.util.Map;
 
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ACTION_NAME_ORG_SWITCH;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.NOT_AVAILABLE;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_PUBLISHER_ENABLED;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_PUBLISHER_NAME;
-import static org.wso2.carbon.identity.data.publisher.authentication.moesif.MoesifDataPublishConstants.ORG_SWITCH_STREAM_NAME;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_ORG_SWITCH;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_ENABLED;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_NAME;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_STREAM_NAME;
 
 /**
  * Event handler that publishes organization-switch token grant events to Moesif.
@@ -69,7 +71,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
     @Override
     public void handleEvent(Event event) throws IdentityEventException {
 
-        if (!isEnabled(event)) {
+        if (!isEnabled()) {
             return;
         }
 
@@ -100,12 +102,13 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
 
         // Resolve the company UUID for Moesif from the current tenant domain.
         String companyId = NOT_AVAILABLE;
+        String rootTenantDomain = tenantDomain;
         try {
             String resolvedOrgId = OrganizationManagementConstants.SUPER_ORG_ID;
             if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
-                String rootTenantDomain =
+                rootTenantDomain =
                         OrganizationManagementUtil.getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
-                resolvedOrgId = MoesifDataPublishDataHolder.getInstance()
+                resolvedOrgId = MoesifHandlerDataHolder.getInstance()
                         .getOrganizationManager()
                         .resolveOrganizationId(rootTenantDomain);
             }
@@ -132,7 +135,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
             }
         }
 
-        Object[] metaData = MoesifDataPublishUtils.getMetaDataArray(
+        Object[] metaData = MoesifHandlerUtils.getMetaDataArray(
                 companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE);
 
         Object[] payloadData = buildPayload(
@@ -143,7 +146,13 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
                         ORG_SWITCH_STREAM_NAME, System.currentTimeMillis(),
                         metaData, null, payloadData);
 
-        MoesifDataPublishDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
+        try {
+            FrameworkUtils.startTenantFlow(rootTenantDomain);
+            MoesifHandlerDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
+        } finally {
+            FrameworkUtils.endTenantFlow();
+        }
+
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Published Moesif org-switch event for tenant: " + tenantDomain);
@@ -167,14 +176,15 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         return payload;
     }
 
-    private boolean isEnabled(Event event) throws IdentityEventException {
+    private boolean isEnabled() {
 
         if (this.configs.getModuleProperties() != null) {
             String handlerEnabled = this.configs.getModuleProperties()
                     .getProperty(ORG_SWITCH_PUBLISHER_ENABLED);
             if (Boolean.parseBoolean(handlerEnabled)) {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifDataPublishUtils.isMoesifEnabledForPrimaryTenant(tenantDomain);
+                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
+                        MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
             }
         }
         return false;

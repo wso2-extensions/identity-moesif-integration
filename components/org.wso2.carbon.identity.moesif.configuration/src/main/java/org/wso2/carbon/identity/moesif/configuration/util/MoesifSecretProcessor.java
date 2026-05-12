@@ -147,8 +147,11 @@ public class MoesifSecretProcessor {
     private static String buildSecretReference(String secretType, String secretName)
             throws SecretManagementException {
 
-        String secretTypeId = MoesifConfigurationDataHolder.getInstance().getSecretManager()
-                .getSecretType(secretType).getId();
-        return secretTypeId + ":" + secretName;
+        SecretType secretTypeObj =
+                MoesifConfigurationDataHolder.getInstance().getSecretManager().getSecretType(secretType);
+        if (secretTypeObj == null) {
+            throw new SecretManagementException("Secret Type '" + secretType + "' does not exist.");
+        }
+        return secretTypeObj.getId() + ":" + secretName;
     }
 }

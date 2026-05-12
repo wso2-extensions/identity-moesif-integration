@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.wso2.carbon.identity.moesif</groupId>
         <artifactId>identity-moesif-integration</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -35,6 +35,10 @@
         registration for WSO2 Identity Server.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.moesif</groupId>
+            <artifactId>org.wso2.carbon.identity.moesif.common</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core</artifactId>
@@ -89,6 +93,7 @@
                             org.wso2.carbon.identity.moesif.configuration.internal,
                         </Private-Package>
                         <Import-Package>
+                            org.wso2.carbon.identity.moesif.common.constant; version="${identity.moesif.package.export.version}",
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component.*; version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.lang; version="${commons-lang.wso2.osgi.version.range}",
@@ -106,7 +111,7 @@
                             org.wso2.carbon.identity.tenant.resource.manager.exception; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance.common; version="${identity.governance.imp.pkg.version.range}",
-                            com.fasterxml.jackson.databind; version="[2.0.0, 3.0.0)",
+                            com.fasterxml.jackson.databind; version="${com.fasterxml.jackson.annotation.version.range}",
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.moesif.configuration.internal,

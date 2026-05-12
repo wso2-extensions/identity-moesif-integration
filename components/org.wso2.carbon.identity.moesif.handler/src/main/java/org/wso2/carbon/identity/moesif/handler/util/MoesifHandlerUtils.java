@@ -27,14 +27,7 @@ import org.wso2.carbon.identity.application.common.model.Property;
 
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
-import org.wso2.carbon.identity.flow.execution.engine.model.FlowEventContext;
-import org.wso2.carbon.identity.flow.execution.engine.model.FlowExecutionStep;
-import org.wso2.carbon.identity.flow.execution.engine.model.NodeResponse;
-
-import org.wso2.carbon.identity.flow.mgt.model.ExecutorDTO;
-import org.wso2.carbon.identity.flow.mgt.model.NodeConfig;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
-import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
@@ -53,7 +46,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.ADMIN_INITIATED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.SELF_SIGNUP;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.USER_INVITE;
@@ -116,7 +109,7 @@ public class MoesifHandlerUtils {
         payload[1] = userStoreDomainName;
         payload[2] = tenantDomain;
         payload[3] = userOnboardedMethod;
-        payload[4] = orgId != null ? orgId : "";
+        payload[4] = orgId;
 
         return payload;
     }
@@ -160,6 +153,12 @@ public class MoesifHandlerUtils {
         return payloadData;
     }
 
+    /**
+     * Utility method to replace null or blank strings with a default "NOT_AVAILABLE" value for Moesif payloads.
+     *
+     * @param value The input string value to check.
+     * @return The original value if it's not null/blank, otherwise "NOT_AVAILABLE".
+     */
     public static String replaceIfStringNotAvailable(String value) {
 
         return value != null ? value : NOT_AVAILABLE;
@@ -224,6 +223,16 @@ public class MoesifHandlerUtils {
         return userOnboardedMethod;
     }
 
+    /**
+     * Build the metadata array for the Moesif event, ensuring that all required fields are populated
+     * and defaulting to "NOT_AVAILABLE" where data is missing.
+     *
+     * @param orgUuid    The organization UUID associated with the event.
+     * @param actionName The name of the action being performed (e.g. "UserAuthentication").
+     * @param userId     The ID of the user associated with the event, if applicable.
+     * @param userAgent  The User-Agent string from the HTTP request, if available.
+     * @return An Object array containing the metadata in the expected order for Moesif events.
+     */
     public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
         Object[] metaData = new Object[4];
 
@@ -235,6 +244,12 @@ public class MoesifHandlerUtils {
         return metaData;
     }
 
+    /**
+     * Extract the User-Agent header from the HTTP request associated with the event, if available.
+     *
+     * @param event The identity event containing the HTTP request as a property.
+     * @return An Optional containing the User-Agent string if it could be extracted, or empty if not available.
+     */
     public static Optional<String> extractUserAgent(Event event) {
 
         try {
@@ -252,16 +267,18 @@ public class MoesifHandlerUtils {
     }
 
     /**
-     * Checks whether Moesif publishing is enabled for the primary (root) organisation that owns
-     * the given tenant domain.
+     * Checks whether a specific Moesif handler is enabled for the primary (root) organisation that owns
+     * the given tenant domain by reading the per-handler governance connector property.
      *
      * <p>The method resolves the org hierarchy upward to the primary organisation and then reads
-     * the {@code moesif.publisher.enabled} governance connector property for that tenant.</p>
+     * the supplied {@code governancePropertyKey} for that tenant.</p>
      *
-     * @param tenantDomain tenant domain of the current sub-organisation
+     * @param tenantDomain        tenant domain of the current sub-organisation
+     * @param governancePropertyKey the governance connector property key for the specific handler
+     *                            (e.g. {@code MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY})
      * @return {@code true} only when the governance property is explicitly set to {@code "true"}
      */
-    public static boolean isMoesifEnabledForPrimaryTenant(String tenantDomain) {
+    public static boolean isHandlerEnabledForPrimaryTenant(String tenantDomain, String governancePropertyKey) {
 
         try {
             String primaryOrgTenantDomain = tenantDomain;
@@ -270,9 +287,7 @@ public class MoesifHandlerUtils {
                         .getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
             }
             Property[] properties = MoesifHandlerDataHolder.getInstance().getIdentityGovernanceService()
-                    .getConfiguration(
-                            new String[]{MoesifHandlerConstants.MOESIF_PUBLISHER_ENABLED_PROPERTY},
-                            primaryOrgTenantDomain);
+                    .getConfiguration(new String[]{governancePropertyKey}, primaryOrgTenantDomain);
             return properties != null && properties.length > 0
                     && Boolean.parseBoolean(properties[0].getValue());
         } catch (OrganizationManagementException | IdentityGovernanceException e) {

@@ -21,20 +21,25 @@ package org.wso2.carbon.identity.moesif.handler;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
 import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
 import org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils;
+import org.wso2.carbon.identity.organization.management.service.constant.OrganizationManagementConstants;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
+import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 
 import java.util.Map;
 import java.util.Optional;
 
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_USER_REGISTRATION;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.POST_ADD_USER;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.REGISTRATION_STREAM_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_REGISTRATION_PUBLISHER_ENABLED;
@@ -58,7 +63,7 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
     @Override
     public void handleEvent(Event event) throws IdentityEventException {
 
-        if (!isEnabled(event)) {
+        if (!isEnabled()) {
             return;
         }
 
@@ -80,37 +85,49 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
         Object[] payload = MoesifHandlerUtils.buildMoesifRegistrationPayload(eventProperties, tenantDomain);
         Optional<String> userAgent = MoesifHandlerUtils.extractUserAgent(event);
 
+        String rootTenantDomain = tenantDomain;
+        String parentOrgId = OrganizationManagementConstants.SUPER_ORG_ID;
         try {
-            String parentOrgId = MoesifHandlerDataHolder.getInstance().getOrganizationManager()
-                    .getParentOrganizationId(
-                            MoesifHandlerDataHolder.getInstance().getOrganizationManager()
-                                    .resolveOrganizationId(tenantDomain));
-
-            Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(parentOrgId,
-                    ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE));
-
-            org.wso2.carbon.databridge.commons.Event databridgeEvent =
-                    new org.wso2.carbon.databridge.commons.Event(
-                            REGISTRATION_STREAM_NAME, System.currentTimeMillis(),
-                            metadataArray, null, payload);
-            MoesifHandlerDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Published Moesif registration event for tenant: " + tenantDomain);
+            if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                rootTenantDomain =
+                        OrganizationManagementUtil.getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
+                parentOrgId = MoesifHandlerDataHolder.getInstance()
+                        .getOrganizationManager()
+                        .resolveOrganizationId(rootTenantDomain);
             }
         } catch (OrganizationManagementException e) {
-            throw new RuntimeException(e);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Could not resolve organisation ID for tenant '" + tenantDomain
+                        + "'; using NOT_AVAILABLE as company ID.", e);
+            }
+        }
+        Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(parentOrgId,
+                ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE));
+
+        org.wso2.carbon.databridge.commons.Event databridgeEvent =
+                new org.wso2.carbon.databridge.commons.Event(
+                        REGISTRATION_STREAM_NAME, System.currentTimeMillis(),
+                        metadataArray, null, payload);
+        try {
+            FrameworkUtils.startTenantFlow(rootTenantDomain);
+            MoesifHandlerDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
+        } finally {
+            FrameworkUtils.endTenantFlow();
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Published Moesif registration event for tenant: " + tenantDomain);
         }
     }
 
-    private boolean isEnabled(Event event) throws IdentityEventException {
+    private boolean isEnabled() {
 
         if (this.configs.getModuleProperties() != null) {
             String handlerEnabled = this.configs.getModuleProperties()
                     .getProperty(USER_REGISTRATION_PUBLISHER_ENABLED);
             if (Boolean.parseBoolean(handlerEnabled)) {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isMoesifEnabledForPrimaryTenant(tenantDomain);
+                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
+                        MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
             }
         }
         return false;
