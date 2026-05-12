@@ -36,6 +36,12 @@
         and HTTP publisher adapter.</description>
     <url>http://wso2.org</url>
 
+    <scm>
+        <url>https://github.com/wso2-extensions/identity-moesif-integration.git</url>
+        <developerConnection>scm:git:https://github.com/wso2-extensions/identity-moesif-integration.git</developerConnection>
+        <connection>scm:git:https://github.com/wso2-extensions/identity-moesif-integration.git</connection>
+        <tag>HEAD</tag>
+    </scm>
     <modules>
         <module>components/org.wso2.carbon.identity.moesif.common</module>
         <module>components/org.wso2.carbon.identity.moesif.configuration</module>
