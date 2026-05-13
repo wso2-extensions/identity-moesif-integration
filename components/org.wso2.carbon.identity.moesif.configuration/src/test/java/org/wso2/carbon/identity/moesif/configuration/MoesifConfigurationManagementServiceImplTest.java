@@ -18,13 +18,17 @@
 
 package org.wso2.carbon.identity.moesif.configuration;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.configuration.mgt.core.ConfigurationManager;
 import org.wso2.carbon.identity.configuration.mgt.core.exception.ConfigurationManagementClientException;
 import org.wso2.carbon.identity.configuration.mgt.core.model.Resource;
 import org.wso2.carbon.identity.configuration.mgt.core.model.Resources;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.moesif.configuration.constant.MoesifConfigurationConstants;
 import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementClientException;
 import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementException;
 import org.wso2.carbon.identity.moesif.configuration.internal.MoesifConfigurationDataHolder;
@@ -45,15 +49,24 @@ import static org.testng.Assert.assertTrue;
  *
  * <p>All OSGi-bound services ({@link ConfigurationManager}, etc.) are replaced by
  * Mockito mocks injected directly into {@link MoesifConfigurationDataHolder} via its
- * public setters before every test method.
+ * public setters before every test method.</p>
+ *
+ * <p>{@link IdentityUtil} is statically mocked so that {@code validateIfMoesifEnabled()}
+ * returns {@code true} by default in all tests.</p>
  */
 public class MoesifConfigurationManagementServiceImplTest {
 
     private MoesifConfigurationManagementServiceImpl service;
     private ConfigurationManager mockConfigManager;
+    private MockedStatic<IdentityUtil> mockedIdentityUtil;
 
     private static final String RESOURCE_TYPE = "Publisher";
-    private static final String PUBLISHER_NAME = "moesifPublisher";
+    /**
+     * Canonical auth publisher resource name — used as the existence-check resource
+     * in add/get/update/delete operations.
+     */
+    private static final String AUTH_PUBLISHER_RESOURCE_NAME =
+            MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME;
 
     @BeforeMethod
     public void setUp() {
@@ -61,6 +74,19 @@ public class MoesifConfigurationManagementServiceImplTest {
         mockConfigManager = Mockito.mock(ConfigurationManager.class);
         MoesifConfigurationDataHolder.getInstance().setConfigurationManager(mockConfigManager);
         service = new MoesifConfigurationManagementServiceImpl();
+
+        // Static-mock IdentityUtil so validateIfMoesifEnabled() passes by default.
+        mockedIdentityUtil = Mockito.mockStatic(IdentityUtil.class);
+        mockedIdentityUtil.when(() -> IdentityUtil.getProperty(MoesifConfigurationConstants.ENABLED_CONFIG))
+                .thenReturn("true");
+    }
+
+    @AfterMethod
+    public void tearDown() {
+
+        if (mockedIdentityUtil != null) {
+            mockedIdentityUtil.close();
+        }
     }
 
     // ── addMoesifPublisher — input validation (name is fixed internally) ──────
@@ -80,8 +106,8 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherAlreadyExistsThrows() throws Exception {
 
-        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(PUBLISHER_NAME)))
-                .thenReturn(buildResource(PUBLISHER_NAME));
+        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(AUTH_PUBLISHER_RESOURCE_NAME)))
+                .thenReturn(buildResource(AUTH_PUBLISHER_RESOURCE_NAME));
         service.addMoesifPublisher("apiKey", null);
     }
 
@@ -90,7 +116,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testGetPublisherNotFoundThrows() throws Exception {
 
-        stubResourceNotFound(PUBLISHER_NAME);
+        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
         service.getMoesifPublisher();
     }
 
@@ -134,17 +160,17 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test
     public void testGetPublishersReturnsMappedDTOs() throws Exception {
 
-        Resource resource = buildResource(PUBLISHER_NAME);
+        Resource resource = buildResource(AUTH_PUBLISHER_RESOURCE_NAME);
         Resources resources = new Resources(Collections.singletonList(resource));
         when(mockConfigManager.getResourcesByType(RESOURCE_TYPE)).thenReturn(resources);
 
         List<MoesifPublisherDTO> result = service.getMoesifPublishers();
         assertNotNull(result);
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getName(), PUBLISHER_NAME);
+        assertEquals(result.get(0).getName(), AUTH_PUBLISHER_RESOURCE_NAME);
     }
 
-    // ── updateMoesifPublisherApiKey — input validation ────────────────────────
+    // ── updateMoesifPublisher — input validation ──────────────────────────────
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyBlankKeyThrows() throws MoesifConfigurationManagementException {
@@ -161,7 +187,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNotFoundThrows() throws Exception {
 
-        stubResourceNotFound(PUBLISHER_NAME);
+        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
         service.updateMoesifPublisher("newKey", null);
     }
 
@@ -170,7 +196,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testDeletePublisherNotFoundThrows() throws Exception {
 
-        stubResourceNotFound(PUBLISHER_NAME);
+        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
         service.deleteMoesifPublisher();
     }
 

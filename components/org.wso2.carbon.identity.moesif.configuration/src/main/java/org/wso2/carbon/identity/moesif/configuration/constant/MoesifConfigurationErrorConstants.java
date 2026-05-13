@@ -114,11 +114,6 @@ public class MoesifConfigurationErrorConstants {
                 "Missing required configuration: " + MoesifConfigurationConstants.API_KEY_HEADER_CONFIG,
                 "The property '" + MoesifConfigurationConstants.API_KEY_HEADER_CONFIG
                         + "' must be set in deployment.toml under [analytics.moesif]."),
-        ERROR_MISSING_STREAM_NAME(
-                "MOESIF_65013",
-                "Missing required configuration: " + MoesifConfigurationConstants.STREAM_NAME_CONFIG,
-                "The property '" + MoesifConfigurationConstants.STREAM_NAME_CONFIG
-                        + "' must be set in deployment.toml under [analytics.moesif]."),
         ERROR_MISSING_STREAM_VERSION(
                 "MOESIF_65014",
                 "Missing required configuration: " + MoesifConfigurationConstants.STREAM_VERSION_CONFIG,

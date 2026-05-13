@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.configuration.mgt.core.exception.ConfigurationManagementClientException;
 import org.wso2.carbon.identity.configuration.mgt.core.exception.ConfigurationManagementException;
 import org.wso2.carbon.identity.configuration.mgt.core.model.Attribute;
@@ -57,6 +58,7 @@ import javax.xml.transform.TransformerException;
 
 import static org.wso2.carbon.identity.configuration.mgt.core.constant.ConfigurationConstants.ErrorMessages.ERROR_CODE_RESOURCE_DOES_NOT_EXISTS;
 import static org.wso2.carbon.identity.configuration.mgt.core.constant.ConfigurationConstants.ErrorMessages.ERROR_CODE_RESOURCE_TYPE_DOES_NOT_EXISTS;
+import static org.wso2.carbon.identity.moesif.configuration.constant.MoesifConfigurationConstants.*;
 
 /**
  * Implementation of {@link MoesifConfigurationManagementService}.
@@ -69,6 +71,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
 
     private static final String MOESIF_PUBLISHER_RESOURCE_TYPE = "Publisher";
     private static final String RESOURCE_NOT_EXISTS_ERROR_CODE = "CONFIGM_00017";
+    private static final String MOESIF_PUBLISHER_CANONICAL_NAME = "moesif-publisher";
 
     private static final String PROVIDER_URL = "providerURL";
     private static final String AUTH_TYPE = "authType";
@@ -81,22 +84,56 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     private static final String API_KEY_HEADER = "apiKeyHeader";
     private static final String API_KEY_AUTH_TYPE = "API_KEY";
 
-    private static final String MOESIF_PUBLISHER_NAME = "moesifPublisher";
-
     /**
      * Ordered map of publisher type key → governance property constant.
-     * To support a new handler type, add a constant to MoesifConfigurationConstants
-     * and add a single entry here — no other changes needed.
      */
     private static final Map<String, String> PUBLISHER_TYPE_PROPERTY_MAP;
 
+    /**
+     * Ordered map of publisher type key → IS Analytics event publisher resource name.
+     * Each entry corresponds to one event publisher XML deployed in the server.
+     */
+    private static final Map<String, String> PUBLISHER_RESOURCE_MAP;
+
+    /**
+     * Ordered map of publisher type key → IS Analytics event stream name (without version).
+     * Must align with stream definitions in the handler module.
+     */
+    private static final Map<String, String> PUBLISHER_STREAM_MAP;
+
     static {
-        Map<String, String> m = new LinkedHashMap<>();
-        m.put("moesif-authentication-publisher", MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-registration-publisher", MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-flow-publisher", MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
-        m.put("moesif-oauth2-token-publisher", MoesifCommonConstants.MOESIF_OAUTH_TOKEN_PUBLISHER_ENABLED_PROPERTY);
-        PUBLISHER_TYPE_PROPERTY_MAP = Collections.unmodifiableMap(m);
+        Map<String, String> props = new LinkedHashMap<>();
+        props.put(MOESIF_AUTHENTICATION_PUBLISHER,
+                MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
+        props.put(MOESIF_REGISTRATION_PUBLISHER,
+                MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
+        props.put(MOESIF_FLOW_PUBLISHER,
+                MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
+        props.put(MOESIF_ORG_SWITCH_PUBLISHER,
+                MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY);
+        PUBLISHER_TYPE_PROPERTY_MAP = Collections.unmodifiableMap(props);
+
+        Map<String, String> resources = new LinkedHashMap<>();
+        resources.put(MOESIF_AUTHENTICATION_PUBLISHER,
+                MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_REGISTRATION_PUBLISHER,
+                MoesifConfigurationConstants.REGISTRATION_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_FLOW_PUBLISHER,
+                MoesifConfigurationConstants.FLOW_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_ORG_SWITCH_PUBLISHER,
+                MoesifConfigurationConstants.ORG_SWITCH_PUBLISHER_RESOURCE_NAME);
+        PUBLISHER_RESOURCE_MAP = Collections.unmodifiableMap(resources);
+
+        Map<String, String> streams = new LinkedHashMap<>();
+        streams.put(MOESIF_AUTHENTICATION_PUBLISHER,
+                MoesifConfigurationConstants.AUTH_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_REGISTRATION_PUBLISHER,
+                MoesifConfigurationConstants.REGISTRATION_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_FLOW_PUBLISHER,
+                MoesifConfigurationConstants.FLOW_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_ORG_SWITCH_PUBLISHER,
+                MoesifConfigurationConstants.ORG_SWITCH_PUBLISHER_STREAM_NAME);
+        PUBLISHER_STREAM_MAP = Collections.unmodifiableMap(streams);
     }
 
     @Override
@@ -124,7 +161,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             }
         }
 
-        Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
+        // Use the auth publisher resource as the canonical existence check.
+        Optional<Resource> existingResource =
+                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
         if (existingResource.isPresent()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_ALREADY_EXISTS.getCode(),
@@ -132,23 +171,30 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_ALREADY_EXISTS.getDescription());
         }
 
-        MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue);
-
-        Resource resource = buildResourceFromMoesifPublisher(dto);
         try {
-            MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
-                    .addResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
-            reDeployEventPublisherConfiguration(resource);
-            Map<String, Boolean> resolved = eventPublisherEnablement != null ?
-                    eventPublisherEnablement : Collections.emptyMap();
-            updateAllGovernanceConfigs(resolved);
-            MoesifPublisherDTO result = new MoesifPublisherDTO();
-            result.setName(MOESIF_PUBLISHER_NAME);
-            return result;
+            for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
+                String typeKey = entry.getKey();
+                String resourceName = entry.getValue();
+                String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
+                MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
+                Resource resource = buildResourceFromMoesifPublisher(dto);
+                MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
+                        .addResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
+                reDeployEventPublisherConfiguration(resource);
+            }
         } catch (ConfigurationManagementException e) {
             throw handleConfigurationMgtException(e,
-                    String.format(ErrorMessages.ERROR_ADDING_PUBLISHER.getMessage(), MOESIF_PUBLISHER_NAME));
+                    String.format(ErrorMessages.ERROR_ADDING_PUBLISHER.getMessage(), MOESIF_PUBLISHER_CANONICAL_NAME));
         }
+
+        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
+                eventPublisherEnablement : Collections.emptyMap();
+        updateAllGovernanceConfigs(resolved);
+
+        MoesifPublisherDTO result = new MoesifPublisherDTO();
+        result.setName(MOESIF_PUBLISHER_CANONICAL_NAME);
+        result.setPublisherTypes(eventPublisherEnablement);
+        return result;
     }
 
     @Override
@@ -156,7 +202,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
+        // Use auth publisher resource as the canonical source for shared config attributes.
+        Optional<Resource> resourceOptional =
+                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
@@ -164,6 +212,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
         }
         MoesifPublisherDTO dto = buildMoesifPublisherFromResource(resourceOptional.get());
+        dto.setName(MOESIF_PUBLISHER_CANONICAL_NAME);
         populateGovernanceConfigsIntoDto(dto);
         return dto;
     }
@@ -213,7 +262,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             }
         }
 
-        Optional<Resource> existingResource = getPublisherResource(MOESIF_PUBLISHER_NAME);
+        Optional<Resource> existingResource =
+                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
         if (existingResource.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
@@ -221,30 +271,37 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
         }
 
-        MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue);
-
-        Resource resource = buildResourceFromMoesifPublisher(dto);
-        try {
-            MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
-                    .replaceResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
-            reDeployEventPublisherConfiguration(resource);
-            Map<String, Boolean> resolved = eventPublisherEnablement != null ?
-                    eventPublisherEnablement : Collections.emptyMap();
-            updateAllGovernanceConfigs(resolved);
-            MoesifPublisherDTO result = new MoesifPublisherDTO();
-            result.setName(MOESIF_PUBLISHER_NAME);
-            return result;
-        } catch (ConfigurationManagementException e) {
-            throw handleConfigurationMgtException(e,
-                    String.format(ErrorMessages.ERROR_UPDATING_PUBLISHER.getMessage(), MOESIF_PUBLISHER_NAME));
+        for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
+            String typeKey = entry.getKey();
+            String resourceName = entry.getValue();
+            String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
+            MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
+            Resource resource = buildResourceFromMoesifPublisher(dto);
+            try {
+                upsertResource(resource);
+                reDeployEventPublisherConfiguration(resource);
+            } catch (ConfigurationManagementException e) {
+                throw handleConfigurationMgtException(e,
+                        String.format(ErrorMessages.ERROR_UPDATING_PUBLISHER.getMessage(), resourceName));
+            }
         }
+
+        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
+                eventPublisherEnablement : Collections.emptyMap();
+        updateAllGovernanceConfigs(resolved);
+
+        MoesifPublisherDTO result = new MoesifPublisherDTO();
+        result.setName(MOESIF_PUBLISHER_CANONICAL_NAME);
+        result.setPublisherTypes(eventPublisherEnablement);
+        return result;
     }
 
     @Override
     public void deleteMoesifPublisher() throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        Optional<Resource> resourceOptional = getPublisherResource(MOESIF_PUBLISHER_NAME);
+        Optional<Resource> resourceOptional =
+                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
@@ -253,11 +310,13 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
 
         try {
-            MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
-                    .deleteResource(MOESIF_PUBLISHER_RESOURCE_TYPE, MOESIF_PUBLISHER_NAME);
+            for (String resourceName : PUBLISHER_RESOURCE_MAP.values()) {
+                deleteResourceIfExists(resourceName);
+            }
         } catch (ConfigurationManagementException e) {
             throw handleConfigurationMgtException(e,
-                    String.format(ErrorMessages.ERROR_DELETING_PUBLISHER.getMessage(), MOESIF_PUBLISHER_NAME));
+                    String.format(ErrorMessages.ERROR_DELETING_PUBLISHER.getMessage(),
+                            MOESIF_PUBLISHER_CANONICAL_NAME));
         }
 
         try {
@@ -265,24 +324,27 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     API_KEY_AUTH_TYPE, API_KEY_VALUE);
         } catch (SecretManagementException e) {
             log.error(String.format(ErrorMessages.ERROR_DELETING_API_KEY_SECRET.getMessage(),
-                    MOESIF_PUBLISHER_NAME), e);
+                    MOESIF_PUBLISHER_CANONICAL_NAME), e);
         }
 
         updateAllGovernanceConfigs(Collections.emptyMap());
     }
 
     /**
-     * Reads Moesif publisher configuration from the TOML (identity.xml) file via
-     * {@link IdentityUtil#getProperty(String)} and builds a {@link MoesifPublisherDTO}.
-     * Throws {@link MoesifConfigurationManagementServerException} if any required property is missing.
+     * Reads shared Moesif publisher configuration from the TOML file via
+     * {@link IdentityUtil#getProperty(String)} and builds a {@link MoesifPublisherDTO}
+     * for the given publisher resource name and its corresponding event stream.
+     *
+     * @param apiKeyValue  the Moesif API key to store.
+     * @param resourceName the IS Analytics event publisher resource name for this publisher.
+     * @param streamName   the IS Analytics event stream name this publisher subscribes to.
      */
-    private MoesifPublisherDTO buildPublisherDTOFromConfig(String apiKeyValue)
+    private MoesifPublisherDTO buildPublisherDTOFromConfig(String apiKeyValue, String resourceName, String streamName)
             throws MoesifConfigurationManagementServerException {
 
         String providerURL = IdentityUtil.getProperty(MoesifConfigurationConstants.PROVIDER_URL_CONFIG);
         String authType = IdentityUtil.getProperty(MoesifConfigurationConstants.AUTH_TYPE_CONFIG);
         String apiKeyHeader = IdentityUtil.getProperty(MoesifConfigurationConstants.API_KEY_HEADER_CONFIG);
-        String streamName = IdentityUtil.getProperty(MoesifConfigurationConstants.STREAM_NAME_CONFIG);
         String streamVersion = IdentityUtil.getProperty(MoesifConfigurationConstants.STREAM_VERSION_CONFIG);
         String inlineBody = IdentityUtil.getProperty(MoesifConfigurationConstants.INLINE_BODY_CONFIG);
 
@@ -304,12 +366,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_MISSING_API_KEY_HEADER.getMessage(),
                     ErrorMessages.ERROR_MISSING_API_KEY_HEADER.getDescription());
         }
-        if (StringUtils.isBlank(streamName)) {
-            throw new MoesifConfigurationManagementServerException(
-                    ErrorMessages.ERROR_MISSING_STREAM_NAME.getCode(),
-                    ErrorMessages.ERROR_MISSING_STREAM_NAME.getMessage(),
-                    ErrorMessages.ERROR_MISSING_STREAM_NAME.getDescription());
-        }
         if (StringUtils.isBlank(streamVersion)) {
             throw new MoesifConfigurationManagementServerException(
                     ErrorMessages.ERROR_MISSING_STREAM_VERSION.getCode(),
@@ -318,7 +374,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
 
         MoesifPublisherDTO dto = new MoesifPublisherDTO();
-        dto.setName(MOESIF_PUBLISHER_NAME);
+        dto.setName(resourceName);
         dto.setProviderURL(providerURL);
         dto.setAuthType(authType);
         dto.setStreamName(streamName);
@@ -402,6 +458,46 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         resource.setFiles(resourceFiles);
 
         return resource;
+    }
+
+    /**
+     * Upserts a publisher resource: replaces it if it already exists, adds it otherwise.
+     * This allows update operations to work even when only a subset of publisher resources
+     * was previously created.
+     */
+    private void upsertResource(Resource resource) throws ConfigurationManagementException {
+
+        try {
+            MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
+                    .replaceResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
+        } catch (ConfigurationManagementClientException e) {
+            if (RESOURCE_NOT_EXISTS_ERROR_CODE.equals(e.getErrorCode()) ||
+                    ERROR_CODE_RESOURCE_DOES_NOT_EXISTS.getCode().equals(e.getErrorCode())) {
+                MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
+                        .addResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resource);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Deletes a publisher resource, silently skipping it if it does not exist.
+     * This prevents delete failures when only a subset of publisher resources was created.
+     */
+    private void deleteResourceIfExists(String resourceName) throws ConfigurationManagementException {
+
+        try {
+            MoesifConfigurationDataHolder.getInstance().getConfigurationManager()
+                    .deleteResource(MOESIF_PUBLISHER_RESOURCE_TYPE, resourceName);
+        } catch (ConfigurationManagementClientException e) {
+            if (RESOURCE_NOT_EXISTS_ERROR_CODE.equals(e.getErrorCode()) ||
+                    ERROR_CODE_RESOURCE_DOES_NOT_EXISTS.getCode().equals(e.getErrorCode())) {
+                log.debug(String.format("Publisher resource '%s' not found during delete — skipping.", resourceName));
+            } else {
+                throw e;
+            }
+        }
     }
 
     private MoesifPublisherDTO buildMoesifPublisherFromResource(Resource resource) {
@@ -524,28 +620,33 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         try {
             String[] propertyNames = PUBLISHER_TYPE_PROPERTY_MAP.values().toArray(new String[0]);
-            org.wso2.carbon.identity.application.common.model.Property[] properties =
+            Property[] properties =
                     MoesifConfigurationDataHolder.getInstance().getIdentityGovernanceService()
                             .getConfiguration(propertyNames, tenantDomain);
             if (properties == null) {
                 return;
             }
             // Build a reverse map: governance property name → publisher type key
-            Map<String, String> propertyToTypeKey = new HashMap<>();
-            for (Map.Entry<String, String> entry : PUBLISHER_TYPE_PROPERTY_MAP.entrySet()) {
-                propertyToTypeKey.put(entry.getValue(), entry.getKey());
-            }
-            Map<String, Boolean> publisherTypes = new LinkedHashMap<>();
-            for (org.wso2.carbon.identity.application.common.model.Property prop : properties) {
-                String typeKey = propertyToTypeKey.get(prop.getName());
-                if (typeKey != null) {
-                    publisherTypes.put(typeKey, Boolean.parseBoolean(prop.getValue()));
-                }
-            }
+            Map<String, Boolean> publisherTypes = getPublisherTypes(properties);
             dto.setPublisherTypes(publisherTypes);
         } catch (IdentityGovernanceException e) {
             log.error(String.format(ErrorMessages.ERROR_READING_GOVERNANCE_CONFIG.getMessage(), tenantDomain), e);
         }
+    }
+
+    private static Map<String, Boolean> getPublisherTypes(Property[] properties) {
+        Map<String, String> propertyToTypeKey = new HashMap<>();
+        for (Map.Entry<String, String> entry : PUBLISHER_TYPE_PROPERTY_MAP.entrySet()) {
+            propertyToTypeKey.put(entry.getValue(), entry.getKey());
+        }
+        Map<String, Boolean> publisherTypes = new LinkedHashMap<>();
+        for (Property prop : properties) {
+            String typeKey = propertyToTypeKey.get(prop.getName());
+            if (typeKey != null) {
+                publisherTypes.put(typeKey, Boolean.parseBoolean(prop.getValue()));
+            }
+        }
+        return publisherTypes;
     }
 
 

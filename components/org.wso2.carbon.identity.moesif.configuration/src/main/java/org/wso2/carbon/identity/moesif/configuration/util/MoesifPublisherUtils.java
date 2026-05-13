@@ -128,7 +128,7 @@ public class MoesifPublisherUtils {
 
         Element mapping = document.createElement(MAPPING);
         root.appendChild(mapping);
-        setAttribute(document, mapping, CUSTOM_MAPPING_KEY, ENABLE);
+        setAttribute(document, mapping, CUSTOM_MAPPING_KEY, DISABLE);
         setAttribute(document, mapping, MAPPING_TYPE_KEY, JSON);
         Element inline = document.createElement(INLINE);
         inline.appendChild(document.createTextNode(inlineBody));
