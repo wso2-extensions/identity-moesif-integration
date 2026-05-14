@@ -131,7 +131,7 @@
                             org.wso2.carbon.identity.data.publisher.authentication.analytics.login; version="${imp.pkg.version.data.publisher.authentication}",
                             org.wso2.carbon.identity.data.publisher.authentication.analytics.login.model; version="${imp.pkg.version.data.publisher.authentication}",
                             org.wso2.carbon.event.stream.core; version="${carbon.analytics-common.imp.pkg.version.range}",
-                            org.wso2.carbon.databridge.commons; version="${carbon.analytics-common.version}",
+                            org.wso2.carbon.databridge.commons; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.identity.organization.management.*; version="${identity.organization.management.core.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.recovery.*; version="${identity.governance.imp.pkg.version.range}",
