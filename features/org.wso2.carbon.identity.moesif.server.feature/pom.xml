@@ -79,12 +79,14 @@
                                         <include>IsAnalytics-Publisher-moesif-MoesifUserRegistrationData.xml</include>
                                         <include>IsAnalytics-Publisher-moesif-MoesifOrgSwitchData.xml</include>
                                         <include>IsAnalytics-Publisher-moesif-MoesifSessionData.xml</include>
+                                        <include>IsAnalytics-Publisher-moesif-MoesifOAuthTokenIssuanceData.xml</include>
 
                                         <include>org.wso2.is.analytics.stream.MoesifUserAuthenticationData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifUserRegistrationData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifFlowData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifOrgSwitchData_1.0.0.json</include>
                                         <include>org.wso2.is.analytics.stream.MoesifSessionData_1.0.0.json</include>
+                                        <include>org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData_1.0.0.json</include>
                                     </includes>
                                 </resource>
                             </resources>

@@ -126,6 +126,12 @@
                 <artifactId>org.wso2.carbon.identity.data.publisher.authentication.analytics.session</artifactId>
                 <version>${identity.datapublisher.authentication.version}</version>
             </dependency>
+            <!-- Identity Data Publisher OAuth -->
+            <dependency>
+                <groupId>org.wso2.carbon.identity.data.publisher.oauth</groupId>
+                <artifactId>org.wso2.carbon.identity.data.publisher.oauth</artifactId>
+                <version>${identity.datapublisher.oauth.version}</version>
+            </dependency>
             <!-- Identity Governance -->
             <dependency>
                 <groupId>org.wso2.carbon.identity.governance</groupId>
@@ -314,6 +320,8 @@
         <!-- Data Publisher -->
         <identity.datapublisher.authentication.version>5.10.2</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>
+        <identity.datapublisher.oauth.version>1.10.1</identity.datapublisher.oauth.version>
+        <imp.pkg.version.data.publisher.oauth>[1.0.0, 2.0.0)</imp.pkg.version.data.publisher.oauth>
         <!-- OSGi -->
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>

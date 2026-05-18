@@ -28,6 +28,7 @@ public class MoesifHandlerConstants {
     public static final String FLOW_PUBLISHER_NAME = "moesifFlowPublisher";
     public static final String ORG_SWITCH_PUBLISHER_NAME = "moesifOrgSwitchPublisher";
     public static final String USER_SESSION_PUBLISHER_NAME = "moesifUserSessionPublisher";
+    public static final String TOKEN_ISSUANCE_PUBLISHER_NAME = "moesifOAuthTokenIssuancePublisher";
 
     public static final String USER_AUTHENTICATION_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifUserAuthenticationData:1.0.0";
@@ -39,12 +40,15 @@ public class MoesifHandlerConstants {
             "org.wso2.is.analytics.stream.MoesifOrgSwitchData:1.0.0";
     public static final String USER_SESSION_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifSessionData:1.0.0";
+    public static final String TOKEN_ISSUANCE_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData:1.0.0";
 
     public static final String USER_REGISTRATION_PUBLISHER_ENABLED = "moesifUserRegistrationPublisher.enable";
     public static final String USER_AUTHENTICATION_PUBLISHER_ENABLED = "moesifUserAuthenticationPublisher.enable";
     public static final String FLOW_PUBLISHER_ENABLED = "moesifFlowPublisher.enable";
     public static final String ORG_SWITCH_PUBLISHER_ENABLED = "moesifOrgSwitchPublisher.enable";
     public static final String USER_SESSION_PUBLISHER_ENABLE = "moesifUserSessionPublisher.enable";
+    public static final String TOKEN_ISSUANCE_PUBLISHER_ENABLED = "moesifOAuthTokenIssuancePublisher.enable";
 
     public static final String ACTION_NAME_USER_AUTHENTICATION = "User-Authentication";
     public static final String ACTION_NAME_USER_REGISTRATION = "User-Registration";
@@ -53,6 +57,7 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_INVITED_USER_REGISTRATION_FLOW = "Invited-User-Registration-Flow";
     public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
     public static final String ACTION_NAME_USER_SESSION = "User-Session";
+    public static final String ACTION_NAME_TOKEN_ISSUANCE = "OAuth-Token-Issuance";
     public static final String ACTION_NAME_FLOW_DEFAULT = "-Flow";
 
     public static final String FLOW_TYPE_REGISTRATION = "REGISTRATION";

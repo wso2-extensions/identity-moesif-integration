@@ -1,0 +1,99 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "username",
+      "type": "STRING"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "userStoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "clientId",
+      "type": "STRING"
+    },
+    {
+      "name": "grantType",
+      "type": "STRING"
+    },
+    {
+      "name": "tokenId",
+      "type": "STRING"
+    },
+    {
+      "name": "authzScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "unAuthzScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "isSuccess",
+      "type": "BOOL"
+    },
+    {
+      "name": "errorCode",
+      "type": "STRING"
+    },
+    {
+      "name": "errorMsg",
+      "type": "STRING"
+    },
+    {
+      "name": "accessTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "refreshTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "issuedTime",
+      "type": "LONG"
+    },
+    {
+      "name": "remoteIp",
+      "type": "STRING"
+    },
+    {
+      "name": "accessingOrganizationId",
+      "type": "STRING"
+    },
+    {
+      "name": "appResidentTenantId",
+      "type": "STRING"
+    },
+    {
+      "name": "rootTenantDomain",
+      "type": "STRING"
+    }
+  ]
+}
+

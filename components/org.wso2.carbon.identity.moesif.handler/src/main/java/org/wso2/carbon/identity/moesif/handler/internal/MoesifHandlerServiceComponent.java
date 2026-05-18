@@ -32,9 +32,12 @@ import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
 import org.wso2.carbon.identity.moesif.handler.MoesifFlowDataPublishHandler;
+import org.wso2.carbon.identity.moesif.handler.MoesifOAuthTokenIssuanceDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifOrgSwitchDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifRegistrationDataPublishHandler;
+import org.wso2.carbon.identity.moesif.handler.MoesifSessionDataPublisherHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifUserAuthenticationDataPublishHandler;
+import org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 
 /**
@@ -61,6 +64,10 @@ public class MoesifHandlerServiceComponent {
                     new MoesifRegistrationDataPublishHandler(), null);
             bundleContext.registerService(AbstractEventHandler.class,
                     new MoesifOrgSwitchDataPublishHandler(), null);
+            bundleContext.registerService(AbstractEventHandler.class,
+                    new MoesifSessionDataPublisherHandler(), null);
+            bundleContext.registerService(OAuthEventInterceptor.class,
+                    new MoesifOAuthTokenIssuanceDataPublishHandler(), null);
 
             if (log.isDebugEnabled()) {
                 log.debug("identity.moesif.handler bundle activated.");
