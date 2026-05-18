@@ -1,0 +1,87 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifSessionData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "sessionId",
+      "type": "STRING"
+    },
+    {
+      "name": "createdTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "updatedTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "terminationTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "action",
+      "type": "INT"
+    },
+    {
+      "name": "username",
+      "type": "STRING"
+    },
+    {
+      "name": "userStoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "remoteIp",
+      "type": "STRING"
+    },
+    {
+      "name": "region",
+      "type": "STRING"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceProvider",
+      "type": "STRING"
+    },
+    {
+      "name": "identityProviders",
+      "type": "STRING"
+    },
+    {
+      "name": "rememberMeEnabled",
+      "type": "BOOL"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    },
+    {
+      "name": "_timestamp",
+      "type": "LONG"
+    }
+  ]
+}
+

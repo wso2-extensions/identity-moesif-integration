@@ -121,6 +121,11 @@
                 <artifactId>org.wso2.carbon.identity.data.publisher.authentication.analytics.login</artifactId>
                 <version>${identity.datapublisher.authentication.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.datapublisher.authentication</groupId>
+                <artifactId>org.wso2.carbon.identity.data.publisher.authentication.analytics.session</artifactId>
+                <version>${identity.datapublisher.authentication.version}</version>
+            </dependency>
             <!-- Identity Governance -->
             <dependency>
                 <groupId>org.wso2.carbon.identity.governance</groupId>
