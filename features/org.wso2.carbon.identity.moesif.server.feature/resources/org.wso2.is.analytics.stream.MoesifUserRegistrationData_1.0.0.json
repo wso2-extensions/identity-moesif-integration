@@ -19,15 +19,23 @@
     {
       "name": "userAgent",
       "type": "STRING"
+    },
+    {
+      "name": "ipAddress",
+      "type": "STRING"
     }
   ],
   "payloadData": [
     {
-      "name": "userCreatedTime",
+      "name": "createdTimeStamp",
       "type": "STRING"
     },
     {
       "name": "userstoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "eventId",
       "type": "STRING"
     },
     {

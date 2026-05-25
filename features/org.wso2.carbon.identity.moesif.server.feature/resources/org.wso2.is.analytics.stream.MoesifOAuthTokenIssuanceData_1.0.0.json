@@ -19,19 +19,15 @@
     {
       "name": "userAgent",
       "type": "STRING"
+    },
+    {
+      "name": "ipAddress",
+      "type": "STRING"
     }
   ],
   "payloadData": [
     {
-      "name": "username",
-      "type": "STRING"
-    },
-    {
       "name": "tenantDomain",
-      "type": "STRING"
-    },
-    {
-      "name": "userStoreDomain",
       "type": "STRING"
     },
     {
@@ -43,43 +39,15 @@
       "type": "STRING"
     },
     {
-      "name": "tokenId",
+      "name": "userType",
       "type": "STRING"
     },
     {
-      "name": "authzScopes",
+      "name": "iat",
       "type": "STRING"
     },
     {
-      "name": "unAuthzScopes",
-      "type": "STRING"
-    },
-    {
-      "name": "isSuccess",
-      "type": "BOOL"
-    },
-    {
-      "name": "errorCode",
-      "type": "STRING"
-    },
-    {
-      "name": "errorMsg",
-      "type": "STRING"
-    },
-    {
-      "name": "accessTokenValidityMillis",
-      "type": "LONG"
-    },
-    {
-      "name": "refreshTokenValidityMillis",
-      "type": "LONG"
-    },
-    {
-      "name": "issuedTime",
-      "type": "LONG"
-    },
-    {
-      "name": "remoteIp",
+      "name": "issuerOrganizationId",
       "type": "STRING"
     },
     {
@@ -92,6 +60,66 @@
     },
     {
       "name": "rootTenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "userName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userStoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "tokenId",
+      "type": "STRING"
+    },
+    {
+      "name": "authorizedScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "unauthorizedScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "accessTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "refreshTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "remoteIp",
+      "type": "STRING"
+    },
+    {
+      "name": "existingTokenUsed",
+      "type": "BOOL"
+    },
+    {
+      "name": "subOrgRequest",
+      "type": "BOOL"
+    },
+    {
+      "name": "appResidentOrgUuid",
+      "type": "STRING"
+    },
+    {
+      "name": "errorCode",
+      "type": "STRING"
+    },
+    {
+      "name": "errorMsg",
+      "type": "STRING"
+    },
+    {
+      "name": "publishingTime",
       "type": "STRING"
     }
   ]

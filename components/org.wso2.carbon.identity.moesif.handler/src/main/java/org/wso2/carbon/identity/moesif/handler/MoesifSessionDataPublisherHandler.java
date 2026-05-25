@@ -23,7 +23,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
+import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.AnalyticsSessionDataPublishHandler;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.SessionDataPublisherConstants;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.SessionDataPublisherUtil;
@@ -41,6 +45,8 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_SESSION_PUBLISHER_ENABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_SESSION_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_SESSION_STREAM_NAME;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Event handler that publishes session lifecycle events (create, update, terminate) to Moesif
@@ -82,14 +88,15 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         }
 
         SessionData sessionData = SessionDataPublisherUtil.buildSessionData(event);
+        AuthenticationContext authenticationContext = (AuthenticationContext) event.getEventProperties().get("context");
         SessionDataPublisherUtil.updateTimeStamps(sessionData, actionId);
 
         // Build the same payload as the analytics session publisher.
         Object[] payloadData = SessionDataPublisherUtil.isPublishingSessionCountEnabled()
-                ? SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId)
-                : SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId);
+                ? SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true)
+                : SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
 
-        publishToMoesif(sessionData, payloadData);
+        publishToMoesif(event, sessionData, authenticationContext, payloadData);
     }
 
     /**
@@ -97,7 +104,8 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
      * Starts a tenant flow with the root/parent organisation tenant domain — unlike the standard
      * analytics publisher which starts from the super-tenant.
      */
-    private void publishToMoesif(SessionData sessionData, Object[] payloadData) {
+    private void publishToMoesif(Event event, SessionData sessionData,
+                                 AuthenticationContext authenticationContext, Object[] payloadData) {
 
         String tenantDomain = sessionData.getTenantDomain();
         if (StringUtils.isBlank(tenantDomain)) {
@@ -135,10 +143,26 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
             }
         }
 
-        String userId = StringUtils.defaultIfBlank(sessionData.getUser(), NOT_AVAILABLE);
+        String userId;
+        try {
+            AuthenticatedUser user = authenticationContext.getSubject();
+            if (user == null) {
+                user = authenticationContext.getLastAuthenticatedUser();
+            }
+            if (user != null) {
+                userId = StringUtils.defaultIfBlank(user.getUserId(), MoesifCommonConstants.NOT_AVAILABLE);
+            } else {
+                userId = NOT_AVAILABLE;
+            }
+        } catch (UserIdNotFoundException e) {
+            userId = NOT_AVAILABLE;
+        }
         String userAgent = StringUtils.defaultIfBlank(sessionData.getUserAgent(), NOT_AVAILABLE);
 
-        Object[] metaData = MoesifHandlerUtils.getMetaDataArray(orgUuid, ACTION_NAME_USER_SESSION, userId, userAgent);
+        String ipAddress = sessionData.getRemoteIP() != null ? sessionData.getRemoteIP() : NOT_AVAILABLE;
+
+        Object[] metaData = MoesifHandlerUtils.getMetaDataArray(orgUuid, ACTION_NAME_USER_SESSION, userId, userAgent,
+                ipAddress);
 
         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                 new org.wso2.carbon.databridge.commons.Event(

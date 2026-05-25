@@ -50,7 +50,7 @@ public class MoesifHandlerUtilsTest {
         Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid-1", "User-Registration", "user-1",
                 "Mozilla/5.0");
         assertNotNull(meta);
-        assertEquals(meta.length, 4);
+        assertEquals(meta.length, 5);
         assertEquals(meta[0], "org-uuid-1");
         assertEquals(meta[1], "User-Registration");
         assertEquals(meta[2], "user-1");
@@ -62,7 +62,7 @@ public class MoesifHandlerUtilsTest {
 
         Object[] meta = MoesifHandlerUtils.getMetaDataArray(null, null, null, null);
         assertNotNull(meta);
-        assertEquals(meta.length, 4);
+        assertEquals(meta.length, 5);
         assertEquals(meta[0], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[2], MoesifCommonConstants.NOT_AVAILABLE);

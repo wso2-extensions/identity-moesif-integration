@@ -37,7 +37,6 @@ import org.wso2.carbon.identity.moesif.handler.MoesifOrgSwitchDataPublishHandler
 import org.wso2.carbon.identity.moesif.handler.MoesifRegistrationDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifSessionDataPublisherHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifUserAuthenticationDataPublishHandler;
-import org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 
 /**
@@ -66,7 +65,7 @@ public class MoesifHandlerServiceComponent {
                     new MoesifOrgSwitchDataPublishHandler(), null);
             bundleContext.registerService(AbstractEventHandler.class,
                     new MoesifSessionDataPublisherHandler(), null);
-            bundleContext.registerService(OAuthEventInterceptor.class,
+            bundleContext.registerService(AbstractEventHandler.class,
                     new MoesifOAuthTokenIssuanceDataPublishHandler(), null);
 
             if (log.isDebugEnabled()) {

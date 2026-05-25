@@ -154,6 +154,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+                <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+                <version>${org.wso2.carbon.identity.inbound.auth.oauth2.version}</version>
+            </dependency>
             <!-- Organization Management -->
             <dependency>
                 <groupId>org.wso2.carbon.identity.organization.management.core</groupId>
@@ -318,9 +323,9 @@
         <identity.organization.management.core.version>1.5.2</identity.organization.management.core.version>
         <identity.organization.management.core.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.organization.management.core.imp.pkg.version.range>
         <!-- Data Publisher -->
-        <identity.datapublisher.authentication.version>5.10.2</identity.datapublisher.authentication.version>
+        <identity.datapublisher.authentication.version>5.10.1</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>
-        <identity.datapublisher.oauth.version>1.10.1</identity.datapublisher.oauth.version>
+        <identity.datapublisher.oauth.version>1.10.0</identity.datapublisher.oauth.version>
         <imp.pkg.version.data.publisher.oauth>[1.0.0, 2.0.0)</imp.pkg.version.data.publisher.oauth>
         <!-- OSGi -->
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
@@ -353,6 +358,7 @@
         <project.scm.id>my-scm-server</project.scm.id>
         <compiler-source.version>21</compiler-source.version>
         <compiler-target.version>21</compiler-target.version>
+        <org.wso2.carbon.identity.inbound.auth.oauth2.version>7.5.38</org.wso2.carbon.identity.inbound.auth.oauth2.version>
     </properties>
 
 </project>

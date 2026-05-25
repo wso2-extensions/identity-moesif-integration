@@ -19,6 +19,10 @@
     {
       "name": "userAgent",
       "type": "STRING"
+    },
+    {
+      "name": "ipAddress",
+      "type": "STRING"
     }
   ],
   "payloadData": [
@@ -127,7 +131,7 @@
       "type": "STRING"
     },
     {
-      "name": "userLoginOrgId",
+      "name": "userAccessingOrgId",
       "type": "STRING"
     },
     {
@@ -147,7 +151,7 @@
       "type": "BOOL"
     },
     {
-      "name": "idps",
+      "name": "identityProviders",
       "type": "ARRAY"
     },
     {

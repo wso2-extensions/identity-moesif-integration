@@ -26,6 +26,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
@@ -39,6 +40,8 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 
 import java.time.Instant;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_ORG_SWITCH;
@@ -136,7 +139,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         }
 
         Object[] metaData = MoesifHandlerUtils.getMetaDataArray(
-                companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE);
+                companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE, NOT_AVAILABLE);
 
         Object[] payloadData = buildPayload(
                 userResidentOrgId, accessingOrgId, applicationName, applicationTenantDomain, tenantDomain, errorCode);

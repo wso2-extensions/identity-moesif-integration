@@ -232,15 +232,42 @@ public class MoesifHandlerUtils {
      * @param userId     The ID of the user associated with the event, if applicable.
      * @param userAgent  The User-Agent string from the HTTP request, if available.
      * @return An Object array containing the metadata in the expected order for Moesif events.
+     * @deprecated Use {@link #getMetaDataArray(String, String, String, String, String)} which also
+     * carries the client IP. This 4-arg form is retained for callers that haven't migrated to the
+     * 5-field stream definitions yet.
      */
+    @Deprecated
     public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
-        Object[] metaData = new Object[4];
 
+        return getMetaDataArray(orgUuid, actionName, userId, userAgent, NOT_AVAILABLE);
+    }
+
+    /**
+     * Build the metadata array for the Moesif event, including the client IP address.
+     *
+     * <p>The returned array maps positionally onto the 5-field {@code metaData} block in every
+     * Moesif stream definition: {@code companyId}, {@code actionName}, {@code userId},
+     * {@code userAgent}, {@code ipAddress}. The Moesif HTTP adapter routes the entries to
+     * different parts of the wire payload — {@code userAgent} becomes an HTTP header,
+     * {@code ipAddress} becomes a nested {@code request.ipAddress} field, and the remaining
+     * three flatten to the body root.</p>
+     *
+     * @param orgUuid    The organization UUID associated with the event.
+     * @param actionName The name of the action being performed (e.g. "UserAuthentication").
+     * @param userId     The ID of the user associated with the event, if applicable.
+     * @param userAgent  The User-Agent string from the HTTP request, if available.
+     * @param ipAddress  The client IP address; {@code NOT_AVAILABLE} when the handler can't resolve it.
+     * @return An Object array containing the metadata in the expected order for Moesif events.
+     */
+    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId,
+                                            String userAgent, String ipAddress) {
+
+        Object[] metaData = new Object[5];
         metaData[0] = orgUuid != null ? orgUuid : NOT_AVAILABLE;
         metaData[1] = actionName != null ? actionName : NOT_AVAILABLE;
         metaData[2] = userId != null ? userId : NOT_AVAILABLE;
         metaData[3] = userAgent != null ? userAgent : NOT_AVAILABLE;
-
+        metaData[4] = ipAddress != null ? ipAddress : NOT_AVAILABLE;
         return metaData;
     }
 
@@ -295,5 +322,13 @@ public class MoesifHandlerUtils {
                     + "'. Defaulting to disabled.", e);
             return false;
         }
+    }
+
+    public static Object getTimestamp(long epochMillis, boolean useIsoTimestamp) {
+
+        if (epochMillis == 0) {
+            return null;
+        }
+        return useIsoTimestamp ? Instant.ofEpochMilli(epochMillis).toString() : epochMillis;
     }
 }

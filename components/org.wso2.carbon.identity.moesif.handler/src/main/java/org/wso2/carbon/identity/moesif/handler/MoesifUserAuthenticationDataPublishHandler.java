@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.base.IdentityRuntimeException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.AnalyticsLoginDataPublishHandlerV110;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.AnalyticsLoginDataPublisherUtils;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.login.model.AuthenticationData;
@@ -36,6 +37,8 @@ import org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TENANT_DOMAIN_NAMES;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_PUBLISHER_ENABLED;
@@ -83,8 +86,13 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
     private void publishToMoesif(AuthenticationData authenticationData, Event event) {
 
         try {
-            Object[] payloadData = populatePayloadData(authenticationData);
+            Object[] payloadData = populatePayloadData(authenticationData, true);
             Optional<String> userAgent = extractUserAgent(event);
+            // Authentication events carry the remote IP on AuthenticationData itself; fall back to
+            // IdentityUtil.getClientIpAddress on the inbound HTTP request when the AuthenticationData
+            // field isn't populated (e.g. step events fired outside a request scope).
+            String ipAddress = authenticationData.getRemoteIp() != null ? authenticationData.getRemoteIp() :
+                    MoesifCommonConstants.NOT_AVAILABLE;
 
             String[] publishingDomains = (String[]) authenticationData.getParameter(TENANT_DOMAIN_NAMES);
             if (publishingDomains != null) {
@@ -95,7 +103,7 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                                 .resolveOrganizationId(publishingDomain);
                         Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid,
                                 MoesifHandlerConstants.ACTION_NAME_USER_AUTHENTICATION, authenticationData.getUserId(),
-                                userAgent.orElse(MoesifCommonConstants.NOT_AVAILABLE));
+                                userAgent.orElse(MoesifCommonConstants.NOT_AVAILABLE), ipAddress);
 
                         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                                 new org.wso2.carbon.databridge.commons.Event(
