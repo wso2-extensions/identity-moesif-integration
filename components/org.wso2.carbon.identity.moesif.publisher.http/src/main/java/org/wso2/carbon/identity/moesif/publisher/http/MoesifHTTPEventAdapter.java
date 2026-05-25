@@ -116,7 +116,7 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
                                 continue;
                             }
                             if (IP_ADDRESS_FIELD.equals(key)) {
-                                if (isMeaningful(value)) {
+                                if (isValid(value)) {
                                     request.add(IP_ADDRESS_FIELD, value);
                                 }
                                 continue;
@@ -141,14 +141,12 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
      * output payload — we'd rather omit the field than ship a {@code "NOT_AVAILABLE"} placeholder that
      * the downstream consumer would have to filter back out.
      */
-    private static boolean isMeaningful(JsonElement value) {
+    private static boolean isValid(JsonElement value) {
 
         if (value == null || value.isJsonNull()) {
             return false;
         }
         if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
-            // Non-string values (numbers, booleans, arrays, objects) are always passed through;
-            // there's no convention for "absent" on those types.
             return true;
         }
         String s = value.getAsString();

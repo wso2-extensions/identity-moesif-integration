@@ -49,35 +49,12 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_PUBLISHER_NAME;
 
 /**
- * Event handler that publishes OAuth token-issuance events to Moesif via the HTTP output event adapter.
- *
- * <p>Subscribes to {@link IdentityEventConstants.Event#POST_ISSUE_ACCESS_TOKEN_V2} which is fired
- * from {@code AccessTokenEventUtil#publishTokenIssueEvent(...)} on every successful access-token
- * issuance in the OAuth bundle.</p>
- *
- * <p>This handler emits the merged data set of two pre-existing publishers:
- * <ul>
- *     <li>{@code OAuth2AccessTokenIssueEventPublisher} (asgardeo-metering) — tenant/grant/IAT/org context fields.</li>
- *     <li>{@code OAuthTokenIssuanceDASDataPublisher} (identity-data-publisher-oauth) — scopes,
- *         token validity, remote IP, user attributes.</li>
- * </ul>
- * It also carries the {@code EXISTING_TOKEN_USED} flag through to the payload so consumers can
- * tell newly-minted tokens apart from reissues of existing tokens — unlike the metering publisher,
- * which silently drops reissues.</p>
- *
- * <p>All grant types are accepted (the metering publisher restricts to {@code client_credentials}).
- * Sub-organisation requests are resolved to the root organisation tenant so the Moesif HTTP
- * publisher deployed on the root tenant is used, consistent with the other Moesif handlers.</p>
+ * Custom event handler that listens to OAuth token issuance events
+ * and publishes relevant data to Moesif via the HTTP output event adapter.
  */
 public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHandler {
 
     private static final Log LOG = LogFactory.getLog(MoesifOAuthTokenIssuanceDataPublishHandler.class);
-
-    /**
-     * Event property keys not yet exposed via {@code IdentityEventConstants.EventProperty}.
-     * Mirror the string values declared in {@code OAuthConstants.EventProperty} so we don't
-     * have to introduce a new bundle dependency just to read these fields.
-     */
     private static final String EVENT_PROP_AUTHORIZED_SCOPES = "AUTHORIZED_SCOPES";
     private static final String EVENT_PROP_UNAUTHORIZED_SCOPES = "UNAUTHORIZED_SCOPES";
     private static final String EVENT_PROP_ACCESS_TOKEN_VALIDITY_MILLIS = "ACCESS_TOKEN_VALIDITY_MILLIS";
@@ -119,7 +96,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         if (StringUtils.isNotBlank(tenantDomain)
                 && !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)
                 && rootTenantDomain.equals(tenantDomain)) {
-            // The event publisher should have populated ROOT_TENANT_DOMAIN, but recompute defensively.
             try {
                 rootTenantDomain =
                         OrganizationManagementUtil.getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
@@ -152,9 +128,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         String userId = StringUtils.defaultIfBlank(
                 asString(properties.get(IdentityEventConstants.EventProperty.USER_ID)), NOT_AVAILABLE);
 
-        // The REMOTE_IP event property is populated by AccessTokenEventUtil from
-        // tokenReqDTO.getHttpServletRequestWrapper().getRemoteAddr(). When absent we keep
-        // NOT_AVAILABLE — the HTTP adapter omits the field from request.ipAddress in that case.
         String ipAddress = StringUtils.defaultIfBlank(
                 asString(properties.get(EVENT_PROP_REMOTE_IP)), NOT_AVAILABLE);
 
@@ -205,7 +178,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
 
         Object[] payload = new Object[24];
 
-        // 1-9: metering fields (preserved from OAuth2AccessTokenIssueEventPublisher).
         payload[0] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
         payload[1] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.CLIENT_ID));
         payload[2] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.GRANT_TYPE));
@@ -216,37 +188,26 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         payload[7] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.APP_RESIDENT_TENANT_ID));
         payload[8] = StringUtils.defaultIfBlank(rootTenantDomain, NOT_AVAILABLE);
 
-        // 10-13: user / token-identity fields from oauth-publisher.
         payload[9] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_NAME));
         payload[10] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_ID));
         payload[11] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN));
         payload[12] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TOKEN_ID));
 
-        // 14-15: scopes.
         payload[13] = stringOrNotAvailable(p.get(EVENT_PROP_AUTHORIZED_SCOPES));
         payload[14] = stringOrNotAvailable(p.get(EVENT_PROP_UNAUTHORIZED_SCOPES));
 
-        // 16-17: validity periods (LONG on the stream).
         payload[15] = asLong(p.get(EVENT_PROP_ACCESS_TOKEN_VALIDITY_MILLIS));
         payload[16] = asLong(p.get(EVENT_PROP_REFRESH_TOKEN_VALIDITY_MILLIS));
-
-        // 18: remote IP.
         payload[17] = stringOrNotAvailable(p.get(EVENT_PROP_REMOTE_IP));
 
-        // 19-20: flags.
         payload[18] = existingTokenUsed;
         payload[19] = subOrgRequest;
 
-        // 21: app-resident org UUID (mirrors APP_RESIDENT_TENANT_ID — same pattern as
-        // service-provider-residing-org-id in the analytics login payload).
         payload[20] = StringUtils.defaultIfBlank(appResidentOrgUuid, NOT_AVAILABLE);
 
-        // 22-23: error fields. Populated when tokenRespDTO carries an error; empty/NOT_AVAILABLE
-        // on the happy path.
         payload[21] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_CODE));
         payload[22] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_MESSAGE));
 
-        // 24: publishing timestamp (stays last).
         payload[23] = Instant.now().toString();
 
         return payload;
@@ -255,7 +216,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
     private String resolveAppResidentOrgUuid(String clientId, String tenantDomain,
                                              Object appResidentTenantIdRaw) {
 
-        // Path 1: fragment app — main definition is in the primary org.
         if (StringUtils.isNotBlank(clientId) && StringUtils.isNotBlank(tenantDomain)) {
             try {
                 if (OAuth2Util.isFragmentApp(clientId, tenantDomain)) {
@@ -282,7 +242,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
             }
         }
 
-        // Path 2: non-fragment app — use APP_RESIDENT_TENANT_ID.
         int appResidentTenantId = asInt(appResidentTenantIdRaw);
         if (appResidentTenantId == -1) {
             return NOT_AVAILABLE;

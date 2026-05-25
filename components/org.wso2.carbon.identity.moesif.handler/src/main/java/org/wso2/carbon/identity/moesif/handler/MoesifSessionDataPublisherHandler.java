@@ -27,7 +27,6 @@ import org.wso2.carbon.identity.application.authentication.framework.context.Aut
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.AnalyticsSessionDataPublishHandler;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.SessionDataPublisherConstants;
 import org.wso2.carbon.identity.data.publisher.authentication.analytics.session.SessionDataPublisherUtil;
@@ -46,7 +45,6 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_SESSION_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_SESSION_STREAM_NAME;
 
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Event handler that publishes session lifecycle events (create, update, terminate) to Moesif
