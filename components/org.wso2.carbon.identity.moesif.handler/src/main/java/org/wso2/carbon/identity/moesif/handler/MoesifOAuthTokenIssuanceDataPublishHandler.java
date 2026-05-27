@@ -38,8 +38,6 @@ import org.wso2.carbon.identity.organization.management.service.exception.Organi
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
@@ -47,6 +45,7 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_STREAM_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_PUBLISHER_NAME;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.getISOTimestamp;
 
 /**
  * Custom event handler that listens to OAuth token issuance events
@@ -60,9 +59,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
     private static final String EVENT_PROP_ACCESS_TOKEN_VALIDITY_MILLIS = "ACCESS_TOKEN_VALIDITY_MILLIS";
     private static final String EVENT_PROP_REFRESH_TOKEN_VALIDITY_MILLIS = "REFRESH_TOKEN_VALIDITY_MILLIS";
     private static final String EVENT_PROP_REMOTE_IP = "REMOTE_IP";
-
-    private static final DateTimeFormatter IAT_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
 
     @Override
     public String getName() {
@@ -93,6 +89,11 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         // Resolve root org tenant + Moesif company UUID. For super tenant the root is itself.
         String rootTenantDomain = StringUtils.defaultIfBlank(
                 asString(properties.get(IdentityEventConstants.EventProperty.ROOT_TENANT_DOMAIN)), tenantDomain);
+
+        if (StringUtils.isBlank(tenantDomain) && StringUtils.isBlank(rootTenantDomain)) {
+            return;
+        }
+
         if (StringUtils.isNotBlank(tenantDomain)
                 && !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)
                 && rootTenantDomain.equals(tenantDomain)) {
@@ -136,9 +137,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
 
         boolean existingTokenUsed = asBoolean(
                 properties.get(IdentityEventConstants.EventProperty.EXISTING_TOKEN_USED));
-        boolean subOrgRequest = StringUtils.isNotBlank(tenantDomain)
-                && StringUtils.isNotBlank(rootTenantDomain)
-                && !tenantDomain.equals(rootTenantDomain);
+        boolean subOrgRequest = !StringUtils.equals(rootTenantDomain, tenantDomain);
 
         String clientId = asString(properties.get(IdentityEventConstants.EventProperty.CLIENT_ID));
         String appResidentOrgUuid = resolveAppResidentOrgUuid(
@@ -182,7 +181,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         payload[1] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.CLIENT_ID));
         payload[2] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.GRANT_TYPE));
         payload[3] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_TYPE));
-        payload[4] = formatIat(p.get(IdentityEventConstants.EventProperty.IAT));
+        payload[4] = getISOTimestamp(p.get(IdentityEventConstants.EventProperty.IAT));
         payload[5] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ISSUER_ORGANIZATION_ID));
         payload[6] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ACCESSING_ORGANIZATION_ID));
         payload[7] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.APP_RESIDENT_TENANT_ID));
@@ -303,24 +302,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
             return Boolean.parseBoolean((String) value);
         }
         return false;
-    }
-
-    private static String formatIat(Object iat) {
-
-        if (iat instanceof Long) {
-            return IAT_FORMATTER.format(Instant.ofEpochMilli((Long) iat));
-        }
-        if (iat instanceof Number) {
-            return IAT_FORMATTER.format(Instant.ofEpochMilli(((Number) iat).longValue()));
-        }
-        if (iat instanceof String && StringUtils.isNotBlank((String) iat)) {
-            try {
-                return IAT_FORMATTER.format(Instant.ofEpochMilli(Long.parseLong((String) iat)));
-            } catch (NumberFormatException ignored) {
-                // Fall through to NOT_AVAILABLE.
-            }
-        }
-        return NOT_AVAILABLE;
     }
 
     private static long asLong(Object value) {

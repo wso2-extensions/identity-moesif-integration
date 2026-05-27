@@ -37,7 +37,9 @@ import org.wso2.carbon.user.core.UserStoreManager;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +69,8 @@ public class MoesifHandlerUtils {
     private static final String USER_CREATED_TIME_URI = "http://wso2.org/claims/created";
     private static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String USER_AGENT_HEADER = "User-Agent";
+    private static final DateTimeFormatter ISO_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
 
     private MoesifHandlerUtils() {
 
@@ -324,11 +328,21 @@ public class MoesifHandlerUtils {
         }
     }
 
-    public static Object getTimestamp(long epochMillis, boolean useIsoTimestamp) {
+    public static String getISOTimestamp(Object timestamp) {
 
-        if (epochMillis == 0) {
-            return null;
+        if (timestamp instanceof Long) {
+            return ISO_FORMATTER.format(Instant.ofEpochMilli((Long) timestamp));
         }
-        return useIsoTimestamp ? Instant.ofEpochMilli(epochMillis).toString() : epochMillis;
+        if (timestamp instanceof Number) {
+            return ISO_FORMATTER.format(Instant.ofEpochMilli(((Number) timestamp).longValue()));
+        }
+        if (timestamp instanceof String && StringUtils.isNotBlank((String) timestamp)) {
+            try {
+                return ISO_FORMATTER.format(Instant.ofEpochMilli(Long.parseLong((String) timestamp)));
+            } catch (NumberFormatException ignored) {
+                // Fall through to NOT_AVAILABLE.
+            }
+        }
+        return NOT_AVAILABLE;
     }
 }
