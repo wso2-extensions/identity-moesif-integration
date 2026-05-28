@@ -254,12 +254,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        if (apiKeyValue != null && StringUtils.isBlank(apiKeyValue)) {
-            throw new MoesifConfigurationManagementClientException(
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getCode(),
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getMessage(),
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getDescription());
-        }
 
         if (eventPublisherEnablement != null && !eventPublisherEnablement.isEmpty()) {
             List<String> unsupportedKeys = eventPublisherEnablement.keySet().stream()
@@ -283,7 +277,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
         }
 
-        if (apiKeyValue != null) {
+        if (StringUtils.isNotBlank(apiKeyValue)) {
             for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
                 String typeKey = entry.getKey();
                 String resourceName = entry.getValue();
