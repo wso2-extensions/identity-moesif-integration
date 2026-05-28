@@ -79,6 +79,10 @@ public class MoesifConfigurationErrorConstants {
                 "MOESIF_65004",
                 "Error while encrypting Moesif API key.",
                 "Failed to encrypt the Moesif API key secret."),
+        ERROR_RESOLVING_API_KEY(
+                "MOESIF_65020",
+                "Error while resolving existing Moesif API key.",
+                "Failed to resolve the existing Moesif API key secret from the secret manager."),
         ERROR_CONFIGURATION_MANAGEMENT_SERVER(
                 "MOESIF_65005",
                 "Configuration management server error.",

@@ -254,12 +254,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        if (StringUtils.isBlank(apiKeyValue)) {
-            throw new MoesifConfigurationManagementClientException(
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getCode(),
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getMessage(),
-                    ErrorMessages.ERROR_API_KEY_REQUIRED.getDescription());
-        }
 
         if (eventPublisherEnablement != null && !eventPublisherEnablement.isEmpty()) {
             List<String> unsupportedKeys = eventPublisherEnablement.keySet().stream()
@@ -283,11 +277,28 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
         }
 
+        // When apiKeyValue is null/blank, resolve the existing secret so we can still rebuild and
+        // redeploy publisher resources without changing the stored secret. The downstream secret
+        // upsert is value-match idempotent — passing the same value results in no DB write.
+        String effectiveApiKeyValue = apiKeyValue;
+        if (StringUtils.isBlank(effectiveApiKeyValue)) {
+            try {
+                effectiveApiKeyValue = MoesifSecretProcessor.decryptSecret(
+                        MoesifConfigurationConstants.MOESIF_SECRET_PROVIDER,
+                        API_KEY_AUTH_TYPE, API_KEY_VALUE);
+            } catch (SecretManagementException e) {
+                throw new MoesifConfigurationManagementServerException(
+                        ErrorMessages.ERROR_RESOLVING_API_KEY.getCode(),
+                        ErrorMessages.ERROR_RESOLVING_API_KEY.getMessage(),
+                        e.getMessage(), e);
+            }
+        }
+
         for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
             String typeKey = entry.getKey();
             String resourceName = entry.getValue();
             String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
-            MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
+            MoesifPublisherDTO dto = buildPublisherDTOFromConfig(effectiveApiKeyValue, resourceName, streamName);
             Resource resource = buildResourceFromMoesifPublisher(dto);
             try {
                 upsertResource(resource);
