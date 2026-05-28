@@ -62,12 +62,14 @@ public interface MoesifConfigurationManagementService {
     List<MoesifPublisherDTO> getMoesifPublishers() throws MoesifConfigurationManagementException;
 
     /**
-     * Update the API key and per-publisher-type enable flags for an existing Moesif event publisher.
-     * All governance configs are replaced with the provided values (replace-all semantics).
-     * Publisher type keys not present in {@code eventPublisherEnablement} default to {@code false}.
+     * Partially update an existing Moesif event publisher configuration.
+     * The enablement map is always updated (replace-all semantics; absent keys default to {@code false}).
+     * If {@code apiKeyValue} is {@code null}, the existing API key is left unchanged.
+     * If {@code apiKeyValue} is a non-null non-blank string, the API key is updated to that value.
+     * A non-null blank string is rejected with a client error.
      *
-     * @param apiKeyValue    New plain-text Moesif API key value.
-     * @param eventPublisherEnablement Map of publisher type key (e.g. "login", "registration", "flow") to enabled flag.
+     * @param apiKeyValue    New plain-text Moesif API key value, or {@code null} to retain the existing key.
+     * @param eventPublisherEnablement Map of publisher type key (e.g. "moesif-authentication-publisher") to enabled flag.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
      */
