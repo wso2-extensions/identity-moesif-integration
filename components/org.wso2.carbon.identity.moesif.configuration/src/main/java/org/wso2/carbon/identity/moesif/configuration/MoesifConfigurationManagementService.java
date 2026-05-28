@@ -64,11 +64,11 @@ public interface MoesifConfigurationManagementService {
     /**
      * Partially update an existing Moesif event publisher configuration.
      * The enablement map is always updated (replace-all semantics; absent keys default to {@code false}).
-     * If {@code apiKeyValue} is {@code null}, the existing API key is left unchanged.
-     * If {@code apiKeyValue} is a non-null non-blank string, the API key is updated to that value.
-     * A non-null blank string is rejected with a client error.
+     * If {@code apiKeyValue} is {@code null} or blank, the existing API key in the database is left
+     * unchanged and only the enablement flags are updated.
+     * If {@code apiKeyValue} is a non-blank string, the API key is updated to that value.
      *
-     * @param apiKeyValue    New plain-text Moesif API key value, or {@code null} to retain the existing key.
+     * @param apiKeyValue    New plain-text Moesif API key value, or {@code null}/blank to retain the existing key.
      * @param eventPublisherEnablement Map of publisher type key (e.g. "moesif-authentication-publisher") to enabled flag.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
