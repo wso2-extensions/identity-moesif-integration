@@ -26,7 +26,6 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
@@ -41,10 +40,9 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 import java.time.Instant;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_ORG_SWITCH;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.getStringOrNotAvailable;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_STREAM_NAME;
@@ -168,12 +166,12 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         String publishingTime = Instant.now().toString();
 
         Object[] payload = new Object[7];
-        payload[0] = StringUtils.defaultIfBlank(userResidentOrgId, NOT_AVAILABLE);
-        payload[1] = StringUtils.defaultIfBlank(accessingOrgId, NOT_AVAILABLE);
-        payload[2] = StringUtils.defaultIfBlank(spName, NOT_AVAILABLE);
-        payload[3] = StringUtils.defaultIfBlank(applicationTenantDomain, NOT_AVAILABLE);
-        payload[4] = StringUtils.defaultIfBlank(tenantDomain, NOT_AVAILABLE);
-        payload[5] = StringUtils.defaultIfBlank(errorCode, NOT_AVAILABLE);
+        payload[0] = getStringOrNotAvailable(userResidentOrgId);
+        payload[1] = getStringOrNotAvailable(accessingOrgId);
+        payload[2] = getStringOrNotAvailable(spName);
+        payload[3] = getStringOrNotAvailable(applicationTenantDomain);
+        payload[4] = getStringOrNotAvailable(tenantDomain);
+        payload[5] = getStringOrNotAvailable(errorCode);
         payload[6] = publishingTime;
 
         return payload;

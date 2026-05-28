@@ -45,7 +45,10 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_STREAM_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TOKEN_ISSUANCE_PUBLISHER_NAME;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.asBoolean;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.asLong;
 import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.getISOTimestamp;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.getStringOrNotAvailable;
 
 /**
  * Custom event handler that listens to OAuth token issuance events
@@ -135,8 +138,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         Object[] metaData = MoesifHandlerUtils.getMetaDataArray(
                 companyId, ACTION_NAME_TOKEN_ISSUANCE, userId, NOT_AVAILABLE, ipAddress);
 
-        boolean existingTokenUsed = asBoolean(
-                properties.get(IdentityEventConstants.EventProperty.EXISTING_TOKEN_USED));
+        boolean existingTokenUsed = asBoolean(properties.get(IdentityEventConstants.EventProperty.EXISTING_TOKEN_USED));
         boolean subOrgRequest = !StringUtils.equals(rootTenantDomain, tenantDomain);
 
         String clientId = asString(properties.get(IdentityEventConstants.EventProperty.CLIENT_ID));
@@ -177,35 +179,35 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
 
         Object[] payload = new Object[24];
 
-        payload[0] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
-        payload[1] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.CLIENT_ID));
-        payload[2] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.GRANT_TYPE));
-        payload[3] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_TYPE));
+        payload[0] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
+        payload[1] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.CLIENT_ID));
+        payload[2] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.GRANT_TYPE));
+        payload[3] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_TYPE));
         payload[4] = getISOTimestamp(p.get(IdentityEventConstants.EventProperty.IAT));
-        payload[5] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ISSUER_ORGANIZATION_ID));
-        payload[6] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ACCESSING_ORGANIZATION_ID));
-        payload[7] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.APP_RESIDENT_TENANT_ID));
-        payload[8] = StringUtils.defaultIfBlank(rootTenantDomain, NOT_AVAILABLE);
+        payload[5] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ISSUER_ORGANIZATION_ID));
+        payload[6] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ACCESSING_ORGANIZATION_ID));
+        payload[7] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.APP_RESIDENT_TENANT_ID));
+        payload[8] = getStringOrNotAvailable(rootTenantDomain);
 
-        payload[9] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_NAME));
-        payload[10] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_ID));
-        payload[11] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN));
-        payload[12] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TOKEN_ID));
+        payload[9] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_NAME));
+        payload[10] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_ID));
+        payload[11] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN));
+        payload[12] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TOKEN_ID));
 
-        payload[13] = stringOrNotAvailable(p.get(EVENT_PROP_AUTHORIZED_SCOPES));
-        payload[14] = stringOrNotAvailable(p.get(EVENT_PROP_UNAUTHORIZED_SCOPES));
+        payload[13] = getStringOrNotAvailable(p.get(EVENT_PROP_AUTHORIZED_SCOPES));
+        payload[14] = getStringOrNotAvailable(p.get(EVENT_PROP_UNAUTHORIZED_SCOPES));
 
         payload[15] = asLong(p.get(EVENT_PROP_ACCESS_TOKEN_VALIDITY_MILLIS));
         payload[16] = asLong(p.get(EVENT_PROP_REFRESH_TOKEN_VALIDITY_MILLIS));
-        payload[17] = stringOrNotAvailable(p.get(EVENT_PROP_REMOTE_IP));
+        payload[17] = getStringOrNotAvailable(p.get(EVENT_PROP_REMOTE_IP));
 
         payload[18] = existingTokenUsed;
         payload[19] = subOrgRequest;
 
-        payload[20] = StringUtils.defaultIfBlank(appResidentOrgUuid, NOT_AVAILABLE);
+        payload[20] = getStringOrNotAvailable(appResidentOrgUuid);
 
-        payload[21] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_CODE));
-        payload[22] = stringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_MESSAGE));
+        payload[21] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_CODE));
+        payload[22] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_MESSAGE));
 
         payload[23] = Instant.now().toString();
 
@@ -241,7 +243,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
             }
         }
 
-        int appResidentTenantId = asInt(appResidentTenantIdRaw);
+        int appResidentTenantId = getTenantId(appResidentTenantIdRaw);
         if (appResidentTenantId == -1) {
             return NOT_AVAILABLE;
         }
@@ -264,7 +266,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         }
     }
 
-    private static int asInt(Object value) {
+    private static int getTenantId(Object value) {
 
         if (value instanceof Number) {
             return ((Number) value).intValue();
@@ -282,41 +284,6 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
     private static String asString(Object value) {
 
         return value == null ? null : value.toString();
-    }
-
-    private static String stringOrNotAvailable(Object value) {
-
-        if (value == null) {
-            return NOT_AVAILABLE;
-        }
-        String s = value.toString();
-        return StringUtils.isBlank(s) ? NOT_AVAILABLE : s;
-    }
-
-    private static boolean asBoolean(Object value) {
-
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        if (value instanceof String) {
-            return Boolean.parseBoolean((String) value);
-        }
-        return false;
-    }
-
-    private static long asLong(Object value) {
-
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-        if (value instanceof String && StringUtils.isNotBlank((String) value)) {
-            try {
-                return Long.parseLong((String) value);
-            } catch (NumberFormatException ignored) {
-                // fall through
-            }
-        }
-        return 0L;
     }
 
     private boolean isEnabled() {

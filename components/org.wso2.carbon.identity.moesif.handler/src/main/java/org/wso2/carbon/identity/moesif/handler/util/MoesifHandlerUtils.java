@@ -129,48 +129,91 @@ public class MoesifHandlerUtils {
         String publishingTime = Instant.now().toString();
 
         Object[] payloadData = new Object[14];
-        payloadData[0] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.FLOW_TYPE));
-        payloadData[1] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.STEP_TYPE));
-        payloadData[2] = replaceIfStringNotAvailable((String)
+        payloadData[0] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.FLOW_TYPE));
+        payloadData[1] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.STEP_TYPE));
+        payloadData[2] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID));
-        payloadData[3] = replaceIfStringNotAvailable((String)
+        payloadData[3] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_TYPE));
-        payloadData[4] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
-        payloadData[5] = replaceIfStringNotAvailable((String)
+        payloadData[4] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
+        payloadData[5] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
-        payloadData[6] = replaceIfStringNotAvailable((String)
+        payloadData[6] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS));
-        payloadData[7] = replaceIfStringNotAvailable((String)
+        payloadData[7] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_TYPE));
-        payloadData[8] = replaceIfStringNotAvailable((String)
+        payloadData[8] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.APPLICATION_ID));
-        payloadData[9] = replaceIfStringNotAvailable((String)
+        payloadData[9] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.EXECUTOR_NAME));
         payloadData[10] = orgId;
         payloadData[11] = !StringUtils.equals(orgId, parentOrgId);
         payloadData[12] = publishingTime;
-        payloadData[13] = replaceIfStringNotAvailable(IdentityEventConstants.EventProperty.ERROR_CODE);
+        payloadData[13] = getStringOrNotAvailable(
+                eventProperties.get(IdentityEventConstants.EventProperty.ERROR_CODE));
 
         return payloadData;
     }
 
     /**
-     * Utility method to replace null or blank strings with a default "NOT_AVAILABLE" value for Moesif payloads.
+     * Returns the string representation of {@code value}, or {@code NOT_AVAILABLE} when the value is
+     * {@code null} or resolves to a blank string.
      *
-     * @param value The input string value to check.
-     * @return The original value if it's not null/blank, otherwise "NOT_AVAILABLE".
+     * @param value Any object; its {@code toString()} is used when non-null.
+     * @return The string value, or {@code NOT_AVAILABLE}.
      */
-    public static String replaceIfStringNotAvailable(String value) {
+    public static String getStringOrNotAvailable(Object value) {
 
-        return value != null ? value : NOT_AVAILABLE;
+        if (value == null) {
+            return NOT_AVAILABLE;
+        }
+        String s = value.toString();
+        return StringUtils.isBlank(s) ? NOT_AVAILABLE : s;
+    }
+
+    /**
+     * Converts an event property value to a {@code boolean}.
+     * Accepts {@link Boolean} instances or {@link String} values parseable by {@link Boolean#parseBoolean}.
+     *
+     * @param value The raw property value.
+     * @return The boolean value, or {@code false} when the value cannot be converted.
+     */
+    public static boolean asBoolean(Object value) {
+
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof String) {
+            return Boolean.parseBoolean((String) value);
+        }
+        return false;
+    }
+
+    /**
+     * Converts an event property value to a {@code long}.
+     * Accepts {@link Number} instances or {@link String} values parseable as a long.
+     *
+     * @param value The raw property value.
+     * @return The long value, or {@code 0L} when the value cannot be converted.
+     */
+    public static long asLong(Object value) {
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        if (value instanceof String && StringUtils.isNotBlank((String) value)) {
+            try {
+                return Long.parseLong((String) value);
+            } catch (NumberFormatException ignored) {
+                // fall through
+            }
+        }
+        return 0L;
     }
 
     private static String getCreatedTimestamp(String createdTime) {
 
-        if (org.apache.commons.lang3.StringUtils.isBlank(createdTime)) {
+        if (StringUtils.isBlank(createdTime)) {
             return getTimestamp();
         }
         return convertZuluDateFormat(createdTime);
@@ -225,25 +268,6 @@ public class MoesifHandlerUtils {
             }
         }
         return userOnboardedMethod;
-    }
-
-    /**
-     * Build the metadata array for the Moesif event, ensuring that all required fields are populated
-     * and defaulting to "NOT_AVAILABLE" where data is missing.
-     *
-     * @param orgUuid    The organization UUID associated with the event.
-     * @param actionName The name of the action being performed (e.g. "UserAuthentication").
-     * @param userId     The ID of the user associated with the event, if applicable.
-     * @param userAgent  The User-Agent string from the HTTP request, if available.
-     * @return An Object array containing the metadata in the expected order for Moesif events.
-     * @deprecated Use {@link #getMetaDataArray(String, String, String, String, String)} which also
-     * carries the client IP. This 4-arg form is retained for callers that haven't migrated to the
-     * 5-field stream definitions yet.
-     */
-    @Deprecated
-    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
-
-        return getMetaDataArray(orgUuid, actionName, userId, userAgent, NOT_AVAILABLE);
     }
 
     /**
