@@ -323,7 +323,7 @@
         <identity.organization.management.core.version>1.5.2</identity.organization.management.core.version>
         <identity.organization.management.core.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.organization.management.core.imp.pkg.version.range>
         <!-- Data Publisher -->
-        <identity.datapublisher.authentication.version>5.10.1</identity.datapublisher.authentication.version>
+        <identity.datapublisher.authentication.version>5.10.3</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>
         <identity.datapublisher.oauth.version>1.10.0</identity.datapublisher.oauth.version>
         <imp.pkg.version.data.publisher.oauth>[1.0.0, 2.0.0)</imp.pkg.version.data.publisher.oauth>
