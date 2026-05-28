@@ -254,7 +254,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        if (StringUtils.isBlank(apiKeyValue)) {
+        if (apiKeyValue != null && StringUtils.isBlank(apiKeyValue)) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_API_KEY_REQUIRED.getCode(),
                     ErrorMessages.ERROR_API_KEY_REQUIRED.getMessage(),
@@ -283,18 +283,20 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
         }
 
-        for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
-            String typeKey = entry.getKey();
-            String resourceName = entry.getValue();
-            String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
-            MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
-            Resource resource = buildResourceFromMoesifPublisher(dto);
-            try {
-                upsertResource(resource);
-                reDeployEventPublisherConfiguration(resource);
-            } catch (ConfigurationManagementException e) {
-                throw handleConfigurationMgtException(e,
-                        String.format(ErrorMessages.ERROR_UPDATING_PUBLISHER.getMessage(), resourceName));
+        if (apiKeyValue != null) {
+            for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
+                String typeKey = entry.getKey();
+                String resourceName = entry.getValue();
+                String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
+                MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
+                Resource resource = buildResourceFromMoesifPublisher(dto);
+                try {
+                    upsertResource(resource);
+                    reDeployEventPublisherConfiguration(resource);
+                } catch (ConfigurationManagementException e) {
+                    throw handleConfigurationMgtException(e,
+                            String.format(ErrorMessages.ERROR_UPDATING_PUBLISHER.getMessage(), resourceName));
+                }
             }
         }
 
