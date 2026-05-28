@@ -1,5 +1,5 @@
 {
-  "name": "org.wso2.is.analytics.stream.MoesifFlowData",
+  "name": "org.wso2.is.analytics.stream.MoesifSessionData",
   "version": "1.0.0",
   "nickName": "",
   "description": "",
@@ -27,60 +27,65 @@
   ],
   "payloadData": [
     {
-      "name": "flowType",
+      "name": "sessionId",
       "type": "STRING"
     },
     {
-      "name": "stepType",
+      "name": "createdTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "updatedTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "terminationTimestamp",
+      "type": "LONG"
+    },
+    {
+      "name": "action",
+      "type": "INT"
+    },
+    {
+      "name": "username",
       "type": "STRING"
     },
     {
-      "name": "currentNodeId",
+      "name": "userStoreDomain",
       "type": "STRING"
     },
     {
-      "name" : "currentNodeType",
-      "type" : "MAP"
+      "name": "remoteIp",
+      "type": "STRING"
     },
     {
-      "name": "flowId",
-      "type": "MAP"
+      "name": "region",
+      "type": "STRING"
     },
     {
       "name": "tenantDomain",
       "type": "STRING"
     },
     {
-      "name": "nodeResponseStatus",
+      "name": "serviceProvider",
       "type": "STRING"
     },
     {
-      "name": "nodeResponseType",
+      "name": "identityProviders",
       "type": "STRING"
     },
     {
-      "name": "applicationId",
-      "type": "STRING"
-    },
-    {
-      "name": "executerName",
-      "type": "STRING"
-    },
-    {
-      "name": "organizationId",
-      "type": "STRING"
-    },
-    {
-      "name": "isOrganizationLogin",
+      "name": "rememberMeEnabled",
       "type": "BOOL"
     },
     {
-      "name": "publishTimestamp",
+      "name": "userAgent",
       "type": "STRING"
     },
     {
-      "name": "errorCode",
-      "type": "STRING"
+      "name": "_timestamp",
+      "type": "LONG"
     }
   ]
 }
+

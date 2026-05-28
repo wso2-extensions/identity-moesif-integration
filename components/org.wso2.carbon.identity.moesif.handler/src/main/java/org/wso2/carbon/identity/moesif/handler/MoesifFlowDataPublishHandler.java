@@ -24,6 +24,7 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.base.IdentityRuntimeException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
@@ -36,7 +37,10 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_PASSWORD_RECOVERY_FLOW;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_USER_REGISTRATION_FLOW;
@@ -154,7 +158,8 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
 
         try {
 
-            Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid, actionName, userId, null);
+            Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid, actionName, userId,
+                    null, NOT_AVAILABLE);
             org.wso2.carbon.databridge.commons.Event databridgeEvent =
                     new org.wso2.carbon.databridge.commons.Event(
                             FLOW_STREAM_NAME, System.currentTimeMillis(),

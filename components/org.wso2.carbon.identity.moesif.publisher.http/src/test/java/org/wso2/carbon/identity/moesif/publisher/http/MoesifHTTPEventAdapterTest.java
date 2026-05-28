@@ -75,7 +75,6 @@ public class MoesifHTTPEventAdapterTest {
         assertEquals(result.get("company_id").getAsString(), "org-123");
         assertEquals(result.get("action_name").getAsString(), "USER_LOGIN");
         assertEquals(result.get("user_id").getAsString(), "john@example.com");
-        assertEquals(result.get("userAgent").getAsString(), "Mozilla/5.0");
 
         // payloadData nested under "metadata"
         assertTrue(result.has("metadata"));

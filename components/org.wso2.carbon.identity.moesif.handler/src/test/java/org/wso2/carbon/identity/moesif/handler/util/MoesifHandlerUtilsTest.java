@@ -23,7 +23,6 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
-import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,38 +44,114 @@ import static org.wso2.carbon.identity.event.IdentityEventConstants.EventPropert
 public class MoesifHandlerUtilsTest {
 
     @Test
+    public void testGetStringOrNotAvailableNull() {
+
+        assertEquals(MoesifHandlerUtils.getStringOrNotAvailable(null), MoesifCommonConstants.NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testGetStringOrNotAvailableBlankString() {
+
+        assertEquals(MoesifHandlerUtils.getStringOrNotAvailable("   "), MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(MoesifHandlerUtils.getStringOrNotAvailable(""), MoesifCommonConstants.NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testGetStringOrNotAvailableValidString() {
+
+        assertEquals(MoesifHandlerUtils.getStringOrNotAvailable("hello"), "hello");
+    }
+
+    @Test
+    public void testGetStringOrNotAvailableNonStringObject() {
+
+        assertEquals(MoesifHandlerUtils.getStringOrNotAvailable(42), "42");
+    }
+
+    @Test
+    public void testAsBooleanWithBooleanTrue() {
+
+        assertTrue(MoesifHandlerUtils.asBoolean(Boolean.TRUE));
+    }
+
+    @Test
+    public void testAsBooleanWithStringTrue() {
+
+        assertTrue(MoesifHandlerUtils.asBoolean("true"));
+        assertTrue(MoesifHandlerUtils.asBoolean("TRUE"));
+    }
+
+    @Test
+    public void testAsBooleanWithFalseValues() {
+
+        assertFalse(MoesifHandlerUtils.asBoolean(Boolean.FALSE));
+        assertFalse(MoesifHandlerUtils.asBoolean("false"));
+        assertFalse(MoesifHandlerUtils.asBoolean(null));
+        assertFalse(MoesifHandlerUtils.asBoolean(42));
+    }
+
+    @Test
+    public void testAsLongWithLong() {
+
+        assertEquals(MoesifHandlerUtils.asLong(3600000L), 3600000L);
+    }
+
+    @Test
+    public void testAsLongWithInteger() {
+
+        assertEquals(MoesifHandlerUtils.asLong(42), 42L);
+    }
+
+    @Test
+    public void testAsLongWithStringNumber() {
+
+        assertEquals(MoesifHandlerUtils.asLong("7200000"), 7200000L);
+    }
+
+    @Test
+    public void testAsLongWithInvalidValues() {
+
+        assertEquals(MoesifHandlerUtils.asLong(null), 0L);
+        assertEquals(MoesifHandlerUtils.asLong("not-a-number"), 0L);
+        assertEquals(MoesifHandlerUtils.asLong(""), 0L);
+    }
+
+    @Test
     public void testGetMetaDataArrayAllFields() {
 
         Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid-1", "User-Registration", "user-1",
-                "Mozilla/5.0");
+                "Mozilla/5.0", "127.0.0.1");
         assertNotNull(meta);
-        assertEquals(meta.length, 4);
+        assertEquals(meta.length, 5);
         assertEquals(meta[0], "org-uuid-1");
         assertEquals(meta[1], "User-Registration");
         assertEquals(meta[2], "user-1");
         assertEquals(meta[3], "Mozilla/5.0");
+        assertEquals(meta[4], "127.0.0.1");
     }
 
     @Test
     public void testGetMetaDataArrayNullFieldsDefaultToNotAvailable() {
 
-        Object[] meta = MoesifHandlerUtils.getMetaDataArray(null, null, null, null);
+        Object[] meta = MoesifHandlerUtils.getMetaDataArray(null, null, null, null, null);
         assertNotNull(meta);
-        assertEquals(meta.length, 4);
+        assertEquals(meta.length, 5);
         assertEquals(meta[0], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[2], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[3], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[4], MoesifCommonConstants.NOT_AVAILABLE);
     }
 
     @Test
     public void testGetMetaDataArrayPartialNulls() {
 
-        Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid", null, "user-42", null);
+        Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid", null, "user-42", null, null);
         assertEquals(meta[0], "org-uuid");
         assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[2], "user-42");
         assertEquals(meta[3], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[4], MoesifCommonConstants.NOT_AVAILABLE);
     }
 
     @Test
@@ -102,7 +177,7 @@ public class MoesifHandlerUtilsTest {
         assertEquals(payload[10], "org-1");
         assertEquals(payload[11], true);
         assertNotNull(payload[12], "Publishing timestamp should not be null");
-        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
+        assertEquals(payload[13], "OTP_EXPIRED");
     }
 
     @Test
@@ -115,7 +190,7 @@ public class MoesifHandlerUtilsTest {
         Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(eventProperties, "org-1", "org-1");
         assertEquals(payload[0], "PASSWORD_RECOVERY");
         assertEquals(payload[11], false);
-        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
+        assertEquals(payload[13], "OTP_EXPIRED");
     }
 
     @Test
@@ -129,7 +204,7 @@ public class MoesifHandlerUtilsTest {
         assertEquals(payload[10], null);
         assertEquals(payload[11], false);
         assertNotNull(payload[12]);
-        assertEquals(payload[13], IdentityEventConstants.EventProperty.ERROR_CODE);
+        assertEquals(payload[13], MoesifCommonConstants.NOT_AVAILABLE);
     }
 
     @Test

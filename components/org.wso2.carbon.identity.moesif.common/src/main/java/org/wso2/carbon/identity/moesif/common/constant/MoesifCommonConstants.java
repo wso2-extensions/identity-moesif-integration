@@ -46,6 +46,14 @@ public class MoesifCommonConstants {
     public static final String MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY =
             "moesif.orgSwitch.publisher.enable";
 
+    /** Enables or disables the session event publisher per tenant. */
+    public static final String MOESIF_SESSION_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.session.publisher.enable";
+
+    /** Enables or disables the OAuth token issuance event publisher per tenant. */
+    public static final String MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.tokenIssuance.publisher.enable";
+
     private MoesifCommonConstants() {
 
     }

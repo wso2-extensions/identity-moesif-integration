@@ -1,0 +1,127 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    },
+    {
+      "name": "ipAddress",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "clientId",
+      "type": "STRING"
+    },
+    {
+      "name": "grantType",
+      "type": "STRING"
+    },
+    {
+      "name": "userType",
+      "type": "STRING"
+    },
+    {
+      "name": "iat",
+      "type": "STRING"
+    },
+    {
+      "name": "issuerOrganizationId",
+      "type": "STRING"
+    },
+    {
+      "name": "accessingOrganizationId",
+      "type": "STRING"
+    },
+    {
+      "name": "appResidentTenantId",
+      "type": "STRING"
+    },
+    {
+      "name": "rootTenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "userName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userStoreDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "tokenId",
+      "type": "STRING"
+    },
+    {
+      "name": "authorizedScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "unauthorizedScopes",
+      "type": "STRING"
+    },
+    {
+      "name": "accessTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "refreshTokenValidityMillis",
+      "type": "LONG"
+    },
+    {
+      "name": "remoteIp",
+      "type": "STRING"
+    },
+    {
+      "name": "existingTokenUsed",
+      "type": "BOOL"
+    },
+    {
+      "name": "subOrgRequest",
+      "type": "BOOL"
+    },
+    {
+      "name": "appResidentOrgUuid",
+      "type": "STRING"
+    },
+    {
+      "name": "errorCode",
+      "type": "STRING"
+    },
+    {
+      "name": "errorMsg",
+      "type": "STRING"
+    },
+    {
+      "name": "publishingTime",
+      "type": "STRING"
+    }
+  ]
+}
+

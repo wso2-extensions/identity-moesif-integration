@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.moesif.publisher.http;
 
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -61,6 +60,7 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
     private static final String META_DATA_FIELD = "metaData";
     private static final String METADATA_FIELD = "metadata";
     private static final String USER_AGENT_FIELD = "userAgent";
+    private static final String IP_ADDRESS_FIELD = "ipAddress";
     private static final String EVENT_FIELD = "event";
     private static final String PAYLOAD_DATA_FIELD = "payloadData";
     private static final String REQUEST_FIELD = "request";
@@ -79,25 +79,49 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
         JsonObject rawMessage = parseAsJsonObject(message);
         JsonObject result = new JsonObject();
 
-        if (rawMessage == null) {
-            return GSON.toJson(result);
-        }
-
         /*
-         * The payload data in the message needs to be added as metadata in the moesif request body,
-         * and all the entries in the metaData array need to be flattened to the root level of the moesif
-         * request body, so that they can be used as first-class properties in Moesif (e.g. company_id, action_name,
-         * user_id, user_agent etc.).
+         * Target shape (matches the Moesif Actions API expectations):
+         *
+         *   {
+         *     "actionName":  "...",   ← first-class Moesif field, flattened from event.metaData
+         *     "userId":      "...",   ← first-class
+         *     "companyId":   "...",   ← first-class
+         *     "metadata":    { ... }, ← event.payloadData nested verbatim
+         *     "request":     { "time": "...", "ipAddress": "..." }
+         *   }
+         *
+         * Two metaData keys get special handling:
+         *   - userAgent: NEVER goes into the body — it's only emitted as the User-Agent HTTP header
+         *     (see buildHeaders below). Putting it at root would pollute Moesif's first-class field set.
+         *   - ipAddress: nested under request.ipAddress when meaningful. Skipped when missing /
+         *     NOT_AVAILABLE / empty so consumers don't see a placeholder where Moesif expects a real IP.
+         *
+         * All other metaData entries flatten to the root, which is how Moesif sees properties like
+         * `actionName`, `userId`, `companyId`.
          */
-        if (rawMessage.has(EVENT_FIELD)) {
+        JsonObject request = new JsonObject();
+        request.addProperty(TIME_FIELD, Instant.now().toString());
+
+        if (rawMessage != null && rawMessage.has(EVENT_FIELD)) {
             JsonObject event = rawMessage.getAsJsonObject(EVENT_FIELD);
             if (event != null) {
-                // Flatten every metadata entry to the root level of the Moesif payload.
                 if (event.has(META_DATA_FIELD)) {
                     JsonObject metadata = event.getAsJsonObject(META_DATA_FIELD);
                     if (metadata != null) {
                         for (Map.Entry<String, JsonElement> entry : metadata.entrySet()) {
-                            result.add(entry.getKey(), entry.getValue());
+                            String key = entry.getKey();
+                            JsonElement value = entry.getValue();
+                            if (USER_AGENT_FIELD.equals(key)) {
+                                // Stays on the HTTP header only; intentionally not in the body.
+                                continue;
+                            }
+                            if (IP_ADDRESS_FIELD.equals(key)) {
+                                if (isValid(value)) {
+                                    request.add(IP_ADDRESS_FIELD, value);
+                                }
+                                continue;
+                            }
+                            result.add(key, value);
                         }
                     }
                 }
@@ -107,11 +131,26 @@ public class MoesifHTTPEventAdapter extends HTTPEventAdapter {
             }
         }
 
-        JsonObject request = new JsonObject();
-        request.addProperty(TIME_FIELD, Instant.now().toString());
         result.add(REQUEST_FIELD, request);
-
         return GSON.toJson(result);
+    }
+
+    /**
+     * Returns {@code true} when the given JSON element carries a non-blank, non-sentinel string value.
+     * Used to decide whether to surface optional fields (currently only {@code ipAddress}) into the
+     * output payload — we'd rather omit the field than ship a {@code "NOT_AVAILABLE"} placeholder that
+     * the downstream consumer would have to filter back out.
+     */
+    private static boolean isValid(JsonElement value) {
+
+        if (value == null || value.isJsonNull()) {
+            return false;
+        }
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
+            return true;
+        }
+        String s = value.getAsString();
+        return StringUtils.isNotBlank(s) && !NOT_AVAILABLE.equals(s);
     }
 
     @Override

@@ -67,6 +67,38 @@
             <artifactId>org.wso2.carbon.identity.data.publisher.authentication.analytics.login</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.identity.datapublisher.authentication</groupId>
+            <artifactId>org.wso2.carbon.identity.data.publisher.authentication.analytics.session</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.data.publisher.oauth</groupId>
+            <artifactId>org.wso2.carbon.identity.data.publisher.oauth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-coyote</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+            <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-coyote</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon.identity.organization.management.core</groupId>
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
@@ -81,6 +113,20 @@
         <dependency>
             <groupId>org.wso2.org.ops4j.pax.logging</groupId>
             <artifactId>pax-logging-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+            <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-coyote</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -122,14 +168,26 @@
                             org.wso2.carbon.identity.application.authentication.framework.util; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.application.authentication.framework.exception; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.application.authentication.framework.model; version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.application.authentication.framework.context; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.event; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon.identity.event.event; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon.identity.event.handler; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon.identity.event.bean; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.flow.execution.engine.*; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.flow.mgt.*; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.data.publisher.authentication.analytics.login; version="${imp.pkg.version.data.publisher.authentication}",
                             org.wso2.carbon.identity.data.publisher.authentication.analytics.login.model; version="${imp.pkg.version.data.publisher.authentication}",
+                            org.wso2.carbon.identity.data.publisher.authentication.analytics.session; version="${imp.pkg.version.data.publisher.authentication}",
+                            org.wso2.carbon.identity.data.publisher.authentication.analytics.session.model; version="${imp.pkg.version.data.publisher.authentication}",
+                            org.wso2.carbon.identity.data.publisher.oauth; version="${imp.pkg.version.data.publisher.oauth}",
+                            org.wso2.carbon.identity.data.publisher.oauth.listener; version="${imp.pkg.version.data.publisher.oauth}",
+                            org.wso2.carbon.identity.data.publisher.oauth.model; version="${imp.pkg.version.data.publisher.oauth}",
+                            org.wso2.carbon.identity.oauth.event; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth2.authz; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth2.dto; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth2.model; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth2.util; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth.common; version="${identity.inbound.auth.oauth.import.version.range}",
+                            org.wso2.carbon.identity.oauth2; version="${identity.inbound.auth.oauth.import.version.range}",
                             org.wso2.carbon.event.stream.core; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.databridge.commons; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.identity.organization.management.*; version="${identity.organization.management.core.imp.pkg.version.range}",

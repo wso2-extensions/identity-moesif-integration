@@ -111,6 +111,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
         props.put(MOESIF_ORG_SWITCH_PUBLISHER,
                 MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY);
+        props.put(MOESIF_SESSION_PUBLISHER,
+                MoesifCommonConstants.MOESIF_SESSION_PUBLISHER_ENABLED_PROPERTY);
+        props.put(MOESIF_TOKEN_ISSUANCE_PUBLISHER,
+                MoesifCommonConstants.MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY);
         PUBLISHER_TYPE_PROPERTY_MAP = Collections.unmodifiableMap(props);
 
         Map<String, String> resources = new LinkedHashMap<>();
@@ -122,6 +126,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 MoesifConfigurationConstants.FLOW_PUBLISHER_RESOURCE_NAME);
         resources.put(MOESIF_ORG_SWITCH_PUBLISHER,
                 MoesifConfigurationConstants.ORG_SWITCH_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_SESSION_PUBLISHER,
+                MoesifConfigurationConstants.SESSION_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_TOKEN_ISSUANCE_PUBLISHER,
+                MoesifConfigurationConstants.TOKEN_ISSUANCE_PUBLISHER_RESOURCE_NAME);
         PUBLISHER_RESOURCE_MAP = Collections.unmodifiableMap(resources);
 
         Map<String, String> streams = new LinkedHashMap<>();
@@ -133,6 +141,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 MoesifConfigurationConstants.FLOW_PUBLISHER_STREAM_NAME);
         streams.put(MOESIF_ORG_SWITCH_PUBLISHER,
                 MoesifConfigurationConstants.ORG_SWITCH_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_SESSION_PUBLISHER,
+                MoesifConfigurationConstants.SESSION_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_TOKEN_ISSUANCE_PUBLISHER,
+                MoesifConfigurationConstants.TOKEN_ISSUANCE_PUBLISHER_STREAM_NAME);
         PUBLISHER_STREAM_MAP = Collections.unmodifiableMap(streams);
     }
 

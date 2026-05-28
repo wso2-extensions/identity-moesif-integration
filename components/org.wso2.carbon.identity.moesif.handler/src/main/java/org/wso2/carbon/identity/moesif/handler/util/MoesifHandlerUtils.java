@@ -37,7 +37,9 @@ import org.wso2.carbon.user.core.UserStoreManager;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +69,8 @@ public class MoesifHandlerUtils {
     private static final String USER_CREATED_TIME_URI = "http://wso2.org/claims/created";
     private static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String USER_AGENT_HEADER = "User-Agent";
+    private static final DateTimeFormatter ISO_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
 
     private MoesifHandlerUtils() {
 
@@ -125,48 +129,91 @@ public class MoesifHandlerUtils {
         String publishingTime = Instant.now().toString();
 
         Object[] payloadData = new Object[14];
-        payloadData[0] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.FLOW_TYPE));
-        payloadData[1] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.STEP_TYPE));
-        payloadData[2] = replaceIfStringNotAvailable((String)
+        payloadData[0] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.FLOW_TYPE));
+        payloadData[1] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.STEP_TYPE));
+        payloadData[2] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID));
-        payloadData[3] = replaceIfStringNotAvailable((String)
+        payloadData[3] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_TYPE));
-        payloadData[4] = replaceIfStringNotAvailable((String)
-                eventProperties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
-        payloadData[5] = replaceIfStringNotAvailable((String)
+        payloadData[4] = getStringOrNotAvailable(eventProperties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
+        payloadData[5] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
-        payloadData[6] = replaceIfStringNotAvailable((String)
+        payloadData[6] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS));
-        payloadData[7] = replaceIfStringNotAvailable((String)
+        payloadData[7] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_TYPE));
-        payloadData[8] = replaceIfStringNotAvailable((String)
+        payloadData[8] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.APPLICATION_ID));
-        payloadData[9] = replaceIfStringNotAvailable((String)
+        payloadData[9] = getStringOrNotAvailable(
                 eventProperties.get(IdentityEventConstants.EventProperty.EXECUTOR_NAME));
         payloadData[10] = orgId;
         payloadData[11] = !StringUtils.equals(orgId, parentOrgId);
         payloadData[12] = publishingTime;
-        payloadData[13] = replaceIfStringNotAvailable(IdentityEventConstants.EventProperty.ERROR_CODE);
+        payloadData[13] = getStringOrNotAvailable(
+                eventProperties.get(IdentityEventConstants.EventProperty.ERROR_CODE));
 
         return payloadData;
     }
 
     /**
-     * Utility method to replace null or blank strings with a default "NOT_AVAILABLE" value for Moesif payloads.
+     * Returns the string representation of {@code value}, or {@code NOT_AVAILABLE} when the value is
+     * {@code null} or resolves to a blank string.
      *
-     * @param value The input string value to check.
-     * @return The original value if it's not null/blank, otherwise "NOT_AVAILABLE".
+     * @param value Any object; its {@code toString()} is used when non-null.
+     * @return The string value, or {@code NOT_AVAILABLE}.
      */
-    public static String replaceIfStringNotAvailable(String value) {
+    public static String getStringOrNotAvailable(Object value) {
 
-        return value != null ? value : NOT_AVAILABLE;
+        if (value == null) {
+            return NOT_AVAILABLE;
+        }
+        String s = value.toString();
+        return StringUtils.isBlank(s) ? NOT_AVAILABLE : s;
+    }
+
+    /**
+     * Converts an event property value to a {@code boolean}.
+     * Accepts {@link Boolean} instances or {@link String} values parseable by {@link Boolean#parseBoolean}.
+     *
+     * @param value The raw property value.
+     * @return The boolean value, or {@code false} when the value cannot be converted.
+     */
+    public static boolean asBoolean(Object value) {
+
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof String) {
+            return Boolean.parseBoolean((String) value);
+        }
+        return false;
+    }
+
+    /**
+     * Converts an event property value to a {@code long}.
+     * Accepts {@link Number} instances or {@link String} values parseable as a long.
+     *
+     * @param value The raw property value.
+     * @return The long value, or {@code 0L} when the value cannot be converted.
+     */
+    public static long asLong(Object value) {
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        if (value instanceof String && StringUtils.isNotBlank((String) value)) {
+            try {
+                return Long.parseLong((String) value);
+            } catch (NumberFormatException ignored) {
+                // fall through
+            }
+        }
+        return 0L;
     }
 
     private static String getCreatedTimestamp(String createdTime) {
 
-        if (org.apache.commons.lang3.StringUtils.isBlank(createdTime)) {
+        if (StringUtils.isBlank(createdTime)) {
             return getTimestamp();
         }
         return convertZuluDateFormat(createdTime);
@@ -224,23 +271,31 @@ public class MoesifHandlerUtils {
     }
 
     /**
-     * Build the metadata array for the Moesif event, ensuring that all required fields are populated
-     * and defaulting to "NOT_AVAILABLE" where data is missing.
+     * Build the metadata array for the Moesif event, including the client IP address.
+     *
+     * <p>The returned array maps positionally onto the 5-field {@code metaData} block in every
+     * Moesif stream definition: {@code companyId}, {@code actionName}, {@code userId},
+     * {@code userAgent}, {@code ipAddress}. The Moesif HTTP adapter routes the entries to
+     * different parts of the wire payload — {@code userAgent} becomes an HTTP header,
+     * {@code ipAddress} becomes a nested {@code request.ipAddress} field, and the remaining
+     * three flatten to the body root.</p>
      *
      * @param orgUuid    The organization UUID associated with the event.
      * @param actionName The name of the action being performed (e.g. "UserAuthentication").
      * @param userId     The ID of the user associated with the event, if applicable.
      * @param userAgent  The User-Agent string from the HTTP request, if available.
+     * @param ipAddress  The client IP address; {@code NOT_AVAILABLE} when the handler can't resolve it.
      * @return An Object array containing the metadata in the expected order for Moesif events.
      */
-    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId, String userAgent) {
-        Object[] metaData = new Object[4];
+    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId,
+                                            String userAgent, String ipAddress) {
 
+        Object[] metaData = new Object[5];
         metaData[0] = orgUuid != null ? orgUuid : NOT_AVAILABLE;
         metaData[1] = actionName != null ? actionName : NOT_AVAILABLE;
         metaData[2] = userId != null ? userId : NOT_AVAILABLE;
         metaData[3] = userAgent != null ? userAgent : NOT_AVAILABLE;
-
+        metaData[4] = ipAddress != null ? ipAddress : NOT_AVAILABLE;
         return metaData;
     }
 
@@ -295,5 +350,23 @@ public class MoesifHandlerUtils {
                     + "'. Defaulting to disabled.", e);
             return false;
         }
+    }
+
+    public static String getISOTimestamp(Object timestamp) {
+
+        if (timestamp instanceof Long) {
+            return ISO_FORMATTER.format(Instant.ofEpochMilli((Long) timestamp));
+        }
+        if (timestamp instanceof Number) {
+            return ISO_FORMATTER.format(Instant.ofEpochMilli(((Number) timestamp).longValue()));
+        }
+        if (timestamp instanceof String && StringUtils.isNotBlank((String) timestamp)) {
+            try {
+                return ISO_FORMATTER.format(Instant.ofEpochMilli(Long.parseLong((String) timestamp)));
+            } catch (NumberFormatException ignored) {
+                // Fall through to NOT_AVAILABLE.
+            }
+        }
+        return NOT_AVAILABLE;
     }
 }

@@ -44,6 +44,10 @@ public class MoesifConfigurationConstants {
             "IsAnalytics-Publisher-moesif-MoesifFlowData";
     public static final String ORG_SWITCH_PUBLISHER_RESOURCE_NAME =
             "IsAnalytics-Publisher-moesif-MoesifOrgSwitchData";
+    public static final String SESSION_PUBLISHER_RESOURCE_NAME =
+            "IsAnalytics-Publisher-moesif-MoesifSessionData";
+    public static final String TOKEN_ISSUANCE_PUBLISHER_RESOURCE_NAME =
+            "IsAnalytics-Publisher-moesif-MoesifOAuthTokenIssuanceData";
 
     // Per-publisher IS Analytics event stream names (matches stream definitions in handler module).
     public static final String AUTH_PUBLISHER_STREAM_NAME =
@@ -54,11 +58,17 @@ public class MoesifConfigurationConstants {
             "org.wso2.is.analytics.stream.MoesifFlowData";
     public static final String ORG_SWITCH_PUBLISHER_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifOrgSwitchData";
+    public static final String SESSION_PUBLISHER_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifSessionData";
+    public static final String TOKEN_ISSUANCE_PUBLISHER_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData";
 
     public static final String MOESIF_AUTHENTICATION_PUBLISHER = "moesif-authentication-publisher";
     public static final String MOESIF_REGISTRATION_PUBLISHER = "moesif-registration-publisher";
     public static final String MOESIF_FLOW_PUBLISHER = "moesif-flow-publisher";
     public static final String MOESIF_ORG_SWITCH_PUBLISHER = "moesif-org-switch-publisher";
+    public static final String MOESIF_SESSION_PUBLISHER = "moesif-session-publisher";
+    public static final String MOESIF_TOKEN_ISSUANCE_PUBLISHER = "moesif-token-issuance-publisher";
 
     private MoesifConfigurationConstants() {
 

@@ -42,6 +42,7 @@ import java.util.Map;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_ORG_SWITCH;
+import static org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils.getStringOrNotAvailable;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ORG_SWITCH_STREAM_NAME;
@@ -136,7 +137,7 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         }
 
         Object[] metaData = MoesifHandlerUtils.getMetaDataArray(
-                companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE);
+                companyId, ACTION_NAME_ORG_SWITCH, userId, NOT_AVAILABLE, NOT_AVAILABLE);
 
         Object[] payloadData = buildPayload(
                 userResidentOrgId, accessingOrgId, applicationName, applicationTenantDomain, tenantDomain, errorCode);
@@ -165,12 +166,12 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         String publishingTime = Instant.now().toString();
 
         Object[] payload = new Object[7];
-        payload[0] = StringUtils.defaultIfBlank(userResidentOrgId, NOT_AVAILABLE);
-        payload[1] = StringUtils.defaultIfBlank(accessingOrgId, NOT_AVAILABLE);
-        payload[2] = StringUtils.defaultIfBlank(spName, NOT_AVAILABLE);
-        payload[3] = StringUtils.defaultIfBlank(applicationTenantDomain, NOT_AVAILABLE);
-        payload[4] = StringUtils.defaultIfBlank(tenantDomain, NOT_AVAILABLE);
-        payload[5] = StringUtils.defaultIfBlank(errorCode, NOT_AVAILABLE);
+        payload[0] = getStringOrNotAvailable(userResidentOrgId);
+        payload[1] = getStringOrNotAvailable(accessingOrgId);
+        payload[2] = getStringOrNotAvailable(spName);
+        payload[3] = getStringOrNotAvailable(applicationTenantDomain);
+        payload[4] = getStringOrNotAvailable(tenantDomain);
+        payload[5] = getStringOrNotAvailable(errorCode);
         payload[6] = publishingTime;
 
         return payload;

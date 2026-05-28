@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
@@ -37,6 +38,8 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 
 import java.util.Map;
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_USER_REGISTRATION;
@@ -102,7 +105,7 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
             }
         }
         Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(parentOrgId,
-                ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE));
+                ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE), NOT_AVAILABLE);
 
         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                 new org.wso2.carbon.databridge.commons.Event(
