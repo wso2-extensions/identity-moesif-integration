@@ -22,6 +22,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.ThreadContext;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.common.model.Property;
 
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
@@ -71,6 +73,7 @@ public class MoesifHandlerUtils {
     private static final String USER_AGENT_HEADER = "User-Agent";
     private static final DateTimeFormatter ISO_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
+    private static final String CORRELATION_ID_KEY = "Correlation-ID";
 
     private MoesifHandlerUtils() {
 
@@ -108,12 +111,13 @@ public class MoesifHandlerUtils {
         String userOnboardedMethod =
                 getUserOnboardedMethod((String[]) eventProperties.get(IdentityEventConstants.EventProperty.ROLE_LIST));
 
-        Object[] payload = new Object[5];
+        Object[] payload = new Object[6];
         payload[0] = userCreatedTime;
         payload[1] = userStoreDomainName;
-        payload[2] = tenantDomain;
-        payload[3] = userOnboardedMethod;
-        payload[4] = orgId;
+        payload[2] = getCorrelationId();
+        payload[3] = tenantDomain;
+        payload[4] = userOnboardedMethod;
+        payload[5] = orgId;
 
         return payload;
     }
@@ -368,5 +372,21 @@ public class MoesifHandlerUtils {
             }
         }
         return NOT_AVAILABLE;
+    }
+
+    /**
+     * Returns the correlation id.
+     *
+     * @return Correlation id.
+     */
+    private static String getCorrelationId() {
+
+        return isCorrelationIDPresent() ? ThreadContext.get(CORRELATION_ID_KEY)
+                : UUID.randomUUID().toString();
+    }
+
+    private static boolean isCorrelationIDPresent() {
+
+        return ThreadContext.get(CORRELATION_ID_KEY) != null;
     }
 }
