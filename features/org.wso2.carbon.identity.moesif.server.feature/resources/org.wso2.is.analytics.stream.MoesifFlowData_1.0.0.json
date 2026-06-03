@@ -63,7 +63,7 @@
       "type": "STRING"
     },
     {
-      "name": "executerName",
+      "name": "executorName",
       "type": "STRING"
     },
     {
