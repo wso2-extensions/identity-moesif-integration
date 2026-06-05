@@ -51,6 +51,8 @@ import java.util.UUID;
 
 import static org.wso2.carbon.identity.event.IdentityEventConstants.EventProperty.USER_STORE_MANAGER;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.URL_SUFFIX_ACTIONS;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.URL_SUFFIX_USERS;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.ADMIN_INITIATED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.SELF_SIGNUP;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.UserOnboardedMethod.USER_INVITE;
@@ -275,14 +277,15 @@ public class MoesifHandlerUtils {
     }
 
     /**
-     * Build the metadata array for the Moesif event, including the client IP address.
+     * Build the metadata array for a Moesif action event, including the client IP address.
      *
-     * <p>The returned array maps positionally onto the 5-field {@code metaData} block in every
+     * <p>The returned array maps positionally onto the 6-field {@code metaData} block in every
      * Moesif stream definition: {@code companyId}, {@code actionName}, {@code userId},
-     * {@code userAgent}, {@code ipAddress}. The Moesif HTTP adapter routes the entries to
-     * different parts of the wire payload — {@code userAgent} becomes an HTTP header,
-     * {@code ipAddress} becomes a nested {@code request.ipAddress} field, and the remaining
-     * three flatten to the body root.</p>
+     * {@code userAgent}, {@code ipAddress}, {@code urlSuffix}. The Moesif HTTP adapter routes the
+     * entries to different parts of the wire payload — {@code userAgent} becomes an HTTP header,
+     * {@code ipAddress} becomes a nested {@code request.ipAddress} field, {@code urlSuffix} is
+     * consumed to route the request to the matching Moesif endpoint, and the remaining three
+     * flatten to the body root. All action events publish with the {@code actions} suffix.</p>
      *
      * @param orgUuid    The organization UUID associated with the event.
      * @param actionName The name of the action being performed (e.g. "UserAuthentication").
@@ -291,15 +294,38 @@ public class MoesifHandlerUtils {
      * @param ipAddress  The client IP address; {@code NOT_AVAILABLE} when the handler can't resolve it.
      * @return An Object array containing the metadata in the expected order for Moesif events.
      */
-    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId,
+    public static Object[]getMetaDataArray(String orgUuid, String actionName, String userId,
                                             String userAgent, String ipAddress) {
 
-        Object[] metaData = new Object[5];
+        Object[] metaData = new Object[6];
         metaData[0] = orgUuid != null ? orgUuid : NOT_AVAILABLE;
         metaData[1] = actionName != null ? actionName : NOT_AVAILABLE;
         metaData[2] = userId != null ? userId : NOT_AVAILABLE;
         metaData[3] = userAgent != null ? userAgent : NOT_AVAILABLE;
         metaData[4] = ipAddress != null ? ipAddress : NOT_AVAILABLE;
+        metaData[5] = URL_SUFFIX_ACTIONS;
+        return metaData;
+    }
+
+    /**
+     * Build the metadata array for a Moesif user-link event, published to the Moesif Users API
+     * ({@code urlSuffix = users}) to link the anonymous (flow context) identifier with the actual
+     * user ID once it becomes available at flow completion.
+     *
+     * <p>The returned array maps positionally onto the {@code metaData} block of the
+     * {@code MoesifUserLinkData} stream definition: {@code userId}, {@code anonymous_id},
+     * {@code urlSuffix}.</p>
+     *
+     * @param userId      The actual user ID resolved at flow completion.
+     * @param anonymousId The anonymous identifier the flow events were published under.
+     * @return An Object array containing the metadata in the expected order for user-link events.
+     */
+    public static Object[] getUserLinkMetaDataArray(String userId, String anonymousId) {
+
+        Object[] metaData = new Object[3];
+        metaData[0] = userId != null ? userId : NOT_AVAILABLE;
+        metaData[1] = anonymousId != null ? anonymousId : NOT_AVAILABLE;
+        metaData[2] = URL_SUFFIX_USERS;
         return metaData;
     }
 

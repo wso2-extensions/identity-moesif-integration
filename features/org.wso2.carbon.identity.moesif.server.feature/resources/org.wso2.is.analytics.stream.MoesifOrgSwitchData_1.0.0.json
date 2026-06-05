@@ -23,6 +23,10 @@
     {
       "name": "ipAddress",
       "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
+      "type": "STRING"
     }
   ],
   "payloadData": [
@@ -39,16 +43,16 @@
       "type": "STRING"
     },
     {
-        "name": "serviceProviderTenantDomain",
-        "type": "STRING"
+      "name": "serviceProviderTenantDomain",
+      "type": "STRING"
     },
     {
-      "name" : "tenantDomain",
-      "type" : "MAP"
+      "name": "tenantDomain",
+      "type": "STRING"
     },
     {
       "name": "errorCode",
-      "type": "MAP"
+      "type": "STRING"
     },
     {
       "name": "publishTime",

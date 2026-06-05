@@ -177,6 +177,12 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
+            <!-- Commons HttpClient -->
+            <dependency>
+                <groupId>commons-httpclient.wso2</groupId>
+                <artifactId>commons-httpclient</artifactId>
+                <version>${commons-httpclient.wso2.version}</version>
+            </dependency>
             <!-- Jackson -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -334,6 +340,8 @@
         <commons-logging.osgi.version.range>[1.2, 2.0)</commons-logging.osgi.version.range>
         <commons-lang.wso2.osgi.version.range>[2.6.0, 3.0.0)</commons-lang.wso2.osgi.version.range>
         <commons-collections.wso2.osgi.version.range>[3.2.0, 4.0.0)</commons-collections.wso2.osgi.version.range>
+        <commons-httpclient.wso2.version>3.1.0.wso2v2</commons-httpclient.wso2.version>
+        <commons-httpclient.wso2.osgi.version.range>[3.1.0, 4.0.0)</commons-httpclient.wso2.osgi.version.range>
         <!-- Servlet -->
         <imp.pkg.version.javax.servlet>[3.1.0, 4.0.0)</imp.pkg.version.javax.servlet>
         <!-- Third-party libraries -->

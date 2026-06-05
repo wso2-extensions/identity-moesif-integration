@@ -42,6 +42,8 @@ public class MoesifHandlerConstants {
             "org.wso2.is.analytics.stream.MoesifSessionData:1.0.0";
     public static final String TOKEN_ISSUANCE_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData:1.0.0";
+    public static final String USER_LINK_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifUserLinkData:1.0.0";
 
     public static final String USER_REGISTRATION_PUBLISHER_ENABLED = "moesifUserRegistrationPublisher.enable";
     public static final String USER_AUTHENTICATION_PUBLISHER_ENABLED = "moesifUserAuthenticationPublisher.enable";
@@ -58,6 +60,23 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
     public static final String ACTION_NAME_USER_SESSION = "User-Session";
     public static final String ACTION_NAME_TOKEN_ISSUANCE = "OAuth-Token-Issuance";
+
+    /**
+     * Moesif API URL suffixes. Published in the event metaData ({@code urlSuffix}) and consumed by the
+     * Moesif HTTP output adapter to route each event to the matching Moesif endpoint.
+     */
+    public static final String URL_SUFFIX_ACTIONS = "actions";
+    public static final String URL_SUFFIX_USERS = "users";
+
+    /**
+     * Node ID of the terminal node in a flow graph. Mirrors
+     * {@code org.wso2.carbon.identity.flow.mgt.Constants.END_NODE_ID}; kept as a local constant so this
+     * module does not require a framework version that defines it.
+     */
+    public static final String FLOW_END_NODE_ID = "END";
+
+    /** Node response status value published when a node has executed to completion. */
+    public static final String NODE_RESPONSE_STATUS_COMPLETE = "COMPLETE";
 
     /** Event name for user registration events. */
     public static final String POST_ADD_USER = "POST_ADD_USER";

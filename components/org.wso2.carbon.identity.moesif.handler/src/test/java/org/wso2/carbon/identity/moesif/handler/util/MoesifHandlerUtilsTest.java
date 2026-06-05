@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
+import org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -122,12 +123,13 @@ public class MoesifHandlerUtilsTest {
         Object[] meta = MoesifHandlerUtils.getMetaDataArray("org-uuid-1", "User-Registration", "user-1",
                 "Mozilla/5.0", "127.0.0.1");
         assertNotNull(meta);
-        assertEquals(meta.length, 5);
+        assertEquals(meta.length, 6);
         assertEquals(meta[0], "org-uuid-1");
         assertEquals(meta[1], "User-Registration");
         assertEquals(meta[2], "user-1");
         assertEquals(meta[3], "Mozilla/5.0");
         assertEquals(meta[4], "127.0.0.1");
+        assertEquals(meta[5], MoesifHandlerConstants.URL_SUFFIX_ACTIONS);
     }
 
     @Test
@@ -135,12 +137,36 @@ public class MoesifHandlerUtilsTest {
 
         Object[] meta = MoesifHandlerUtils.getMetaDataArray(null, null, null, null, null);
         assertNotNull(meta);
-        assertEquals(meta.length, 5);
+        assertEquals(meta.length, 6);
         assertEquals(meta[0], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[2], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[3], MoesifCommonConstants.NOT_AVAILABLE);
         assertEquals(meta[4], MoesifCommonConstants.NOT_AVAILABLE);
+        // The urlSuffix is always emitted so action events route to the Moesif Actions API.
+        assertEquals(meta[5], MoesifHandlerConstants.URL_SUFFIX_ACTIONS);
+    }
+
+    @Test
+    public void testGetUserLinkMetaDataArray() {
+
+        Object[] meta = MoesifHandlerUtils.getUserLinkMetaDataArray("user-1", "ctx_abc");
+        assertNotNull(meta);
+        assertEquals(meta.length, 3);
+        assertEquals(meta[0], "user-1");
+        assertEquals(meta[1], "ctx_abc");
+        assertEquals(meta[2], MoesifHandlerConstants.URL_SUFFIX_USERS);
+    }
+
+    @Test
+    public void testGetUserLinkMetaDataArrayNullFieldsDefaultToNotAvailable() {
+
+        Object[] meta = MoesifHandlerUtils.getUserLinkMetaDataArray(null, null);
+        assertNotNull(meta);
+        assertEquals(meta.length, 3);
+        assertEquals(meta[0], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[1], MoesifCommonConstants.NOT_AVAILABLE);
+        assertEquals(meta[2], MoesifHandlerConstants.URL_SUFFIX_USERS);
     }
 
     @Test

@@ -23,6 +23,10 @@
     {
       "name": "ipAddress",
       "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
+      "type": "STRING"
     }
   ],
   "payloadData": [

@@ -130,6 +130,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 MoesifConfigurationConstants.SESSION_PUBLISHER_RESOURCE_NAME);
         resources.put(MOESIF_TOKEN_ISSUANCE_PUBLISHER,
                 MoesifConfigurationConstants.TOKEN_ISSUANCE_PUBLISHER_RESOURCE_NAME);
+        resources.put(MOESIF_USER_LINK_PUBLISHER,
+                MoesifConfigurationConstants.USER_LINK_PUBLISHER_RESOURCE_NAME);
         PUBLISHER_RESOURCE_MAP = Collections.unmodifiableMap(resources);
 
         Map<String, String> streams = new LinkedHashMap<>();
@@ -145,6 +147,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 MoesifConfigurationConstants.SESSION_PUBLISHER_STREAM_NAME);
         streams.put(MOESIF_TOKEN_ISSUANCE_PUBLISHER,
                 MoesifConfigurationConstants.TOKEN_ISSUANCE_PUBLISHER_STREAM_NAME);
+        streams.put(MOESIF_USER_LINK_PUBLISHER,
+                MoesifConfigurationConstants.USER_LINK_PUBLISHER_STREAM_NAME);
         PUBLISHER_STREAM_MAP = Collections.unmodifiableMap(streams);
     }
 
@@ -173,9 +177,10 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             }
         }
 
-        // Use the auth publisher resource as the canonical existence check.
+        // Use the user-link publisher resource as the canonical existence check — it is the
+        // only publisher that is always deployed regardless of the enablement selection.
         Optional<Resource> existingResource =
-                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
+                getPublisherResource(MoesifConfigurationConstants.USER_LINK_PUBLISHER_RESOURCE_NAME);
         if (existingResource.isPresent()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_ALREADY_EXISTS.getCode(),
@@ -183,9 +188,15 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     ErrorMessages.ERROR_PUBLISHER_ALREADY_EXISTS.getDescription());
         }
 
+        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
+                eventPublisherEnablement : Collections.emptyMap();
+
         try {
             for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
                 String typeKey = entry.getKey();
+                if (!isPublisherDeployable(typeKey, resolved)) {
+                    continue;
+                }
                 String resourceName = entry.getValue();
                 String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
                 MoesifPublisherDTO dto = buildPublisherDTOFromConfig(apiKeyValue, resourceName, streamName);
@@ -199,8 +210,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     String.format(ErrorMessages.ERROR_ADDING_PUBLISHER.getMessage(), MOESIF_PUBLISHER_CANONICAL_NAME));
         }
 
-        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
-                eventPublisherEnablement : Collections.emptyMap();
         updateAllGovernanceConfigs(resolved);
 
         MoesifPublisherDTO result = new MoesifPublisherDTO();
@@ -214,9 +223,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        // Use auth publisher resource as the canonical source for shared config attributes.
+        // Use the user-link publisher resource as the canonical source for shared config attributes.
         Optional<Resource> resourceOptional =
-                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
+                getPublisherResource(MoesifConfigurationConstants.USER_LINK_PUBLISHER_RESOURCE_NAME);
         if (resourceOptional.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
@@ -269,7 +278,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
 
         Optional<Resource> existingResource =
-                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
+                getPublisherResource(MoesifConfigurationConstants.USER_LINK_PUBLISHER_RESOURCE_NAME);
         if (existingResource.isEmpty()) {
             throw new MoesifConfigurationManagementClientException(
                     ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
@@ -294,13 +303,23 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             }
         }
 
+        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
+                eventPublisherEnablement : Collections.emptyMap();
+
         for (Map.Entry<String, String> entry : PUBLISHER_RESOURCE_MAP.entrySet()) {
             String typeKey = entry.getKey();
             String resourceName = entry.getValue();
-            String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
-            MoesifPublisherDTO dto = buildPublisherDTOFromConfig(effectiveApiKeyValue, resourceName, streamName);
-            Resource resource = buildResourceFromMoesifPublisher(dto);
             try {
+                if (!isPublisherDeployable(typeKey, resolved)) {
+                    // Converge stored state with the requested set: publishers that are no longer
+                    // enabled are removed and undeployed instead of being redeployed.
+                    deleteResourceIfExists(resourceName);
+                    undeployEventPublisherConfiguration(resourceName);
+                    continue;
+                }
+                String streamName = PUBLISHER_STREAM_MAP.get(typeKey);
+                MoesifPublisherDTO dto = buildPublisherDTOFromConfig(effectiveApiKeyValue, resourceName, streamName);
+                Resource resource = buildResourceFromMoesifPublisher(dto);
                 upsertResource(resource);
                 reDeployEventPublisherConfiguration(resource);
             } catch (ConfigurationManagementException e) {
@@ -309,8 +328,6 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
             }
         }
 
-        Map<String, Boolean> resolved = eventPublisherEnablement != null ?
-                eventPublisherEnablement : Collections.emptyMap();
         updateAllGovernanceConfigs(resolved);
 
         MoesifPublisherDTO result = new MoesifPublisherDTO();
@@ -323,18 +340,11 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     public void deleteMoesifPublisher() throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
-        Optional<Resource> resourceOptional =
-                getPublisherResource(MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME);
-        if (resourceOptional.isEmpty()) {
-            throw new MoesifConfigurationManagementClientException(
-                    ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getCode(),
-                    ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getMessage(),
-                    ErrorMessages.ERROR_PUBLISHER_NOT_FOUND.getDescription());
-        }
 
         try {
             for (String resourceName : PUBLISHER_RESOURCE_MAP.values()) {
                 deleteResourceIfExists(resourceName);
+                undeployEventPublisherConfiguration(resourceName);
             }
         } catch (ConfigurationManagementException e) {
             throw handleConfigurationMgtException(e,
@@ -601,6 +611,20 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
     }
 
+    /**
+     * Undeploys the active event publisher configuration of the given resource from the tenant, so a
+     * deleted publisher stops publishing immediately instead of lingering until the next restart.
+     */
+    private void undeployEventPublisherConfiguration(String resourceName) {
+
+        try {
+            MoesifConfigurationDataHolder.getInstance().getResourceManager()
+                    .removeEventPublisherConfiguration(MOESIF_PUBLISHER_RESOURCE_TYPE, resourceName);
+        } catch (TenantResourceManagementException e) {
+            log.warn(String.format(ErrorMessages.ERROR_UNDEPLOYING_PUBLISHER_CONFIG.getMessage(), e.getMessage()));
+        }
+    }
+
     private boolean isResourceTypeNotExistsError(ConfigurationManagementException e) {
 
         return e instanceof ConfigurationManagementClientException &&
@@ -618,6 +642,16 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         return new MoesifConfigurationManagementServerException(
                 ErrorMessages.ERROR_CONFIGURATION_MANAGEMENT_SERVER.getCode(),
                 message, e.getMessage(), e);
+    }
+
+    /**
+     * Returns {@code true} when the given publisher type should be deployed: the user-link publisher
+     * is always deployed alongside any Moesif configuration (it is managed internally and not part of
+     * the user-toggleable publisher set), every other publisher only when the caller enabled it.
+     */
+    private static boolean isPublisherDeployable(String typeKey, Map<String, Boolean> publisherTypes) {
+
+        return MOESIF_USER_LINK_PUBLISHER.equals(typeKey) || Boolean.TRUE.equals(publisherTypes.get(typeKey));
     }
 
     private void updateAllGovernanceConfigs(Map<String, Boolean> publisherTypes) {

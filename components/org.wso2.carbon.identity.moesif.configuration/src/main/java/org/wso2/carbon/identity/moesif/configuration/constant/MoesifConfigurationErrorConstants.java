@@ -132,6 +132,10 @@ public class MoesifConfigurationErrorConstants {
                 "MOESIF_65016",
                 "Error re-deploying Moesif event publisher configuration: %s",
                 "An error occurred while re-deploying the event publisher configuration."),
+        ERROR_UNDEPLOYING_PUBLISHER_CONFIG(
+                "MOESIF_65021",
+                "Error un-deploying Moesif event publisher configuration: %s",
+                "An error occurred while un-deploying the event publisher configuration."),
         ERROR_UPDATING_GOVERNANCE_CONFIG(
                 "MOESIF_65017",
                 "Failed to update Moesif governance properties for tenant: %s",

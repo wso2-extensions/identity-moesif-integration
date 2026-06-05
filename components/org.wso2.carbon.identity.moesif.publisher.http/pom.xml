@@ -31,13 +31,10 @@
     <packaging>bundle</packaging>
     <name>WSO2 Identity - Moesif HTTP Event Publisher</name>
     <description>Custom HTTP output event adapter that formats and forwards identity events to the Moesif
-        Actions API, including Moesif-specific body construction and User-Agent header injection.</description>
+        APIs, including Moesif-specific body construction, User-Agent header injection, API key
+        authentication and per-event URL suffix routing (actions / users / companies).</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.wso2.carbon.analytics-common</groupId>
-            <artifactId>org.wso2.carbon.event.output.adapter.http</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.moesif</groupId>
             <artifactId>org.wso2.carbon.identity.moesif.common</artifactId>
@@ -45,6 +42,18 @@
         <dependency>
             <groupId>org.wso2.carbon.analytics-common</groupId>
             <artifactId>org.wso2.carbon.event.output.adapter.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.secret.mgt.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient.wso2</groupId>
+            <artifactId>commons-httpclient</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -84,8 +93,13 @@
                             org.osgi.service.component.*; version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.lang; version="${commons-lang.wso2.osgi.version.range}",
                             org.apache.commons.logging; version="${commons-logging.osgi.version.range}",
+                            org.apache.commons.httpclient; version="${commons-httpclient.wso2.osgi.version.range}",
+                            org.apache.commons.httpclient.methods; version="${commons-httpclient.wso2.osgi.version.range}",
+                            org.apache.commons.httpclient.params; version="${commons-httpclient.wso2.osgi.version.range}",
+                            org.wso2.carbon.context; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.event.output.adapter.core; version="${carbon.analytics-common.imp.pkg.version.range}",
-                            org.wso2.carbon.event.output.adapter.http; version="${carbon.analytics-common.imp.pkg.version.range}",
+                            org.wso2.carbon.event.output.adapter.core.exception; version="${carbon.analytics-common.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.secret.mgt.core.exception; version="${carbon.identity.framework.imp.pkg.version.range}",
                             com.google.gson; version="${com.google.code.gson.osgi.version.range}",
                         </Import-Package>
                         <Export-Package>
