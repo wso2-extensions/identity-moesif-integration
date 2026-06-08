@@ -42,11 +42,9 @@ import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConsta
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_PASSWORD_RECOVERY_FLOW;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_USER_REGISTRATION_FLOW;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_END_NODE_ID;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_STREAM_NAME;
-import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.NODE_RESPONSE_STATUS_COMPLETE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_LINK_STREAM_NAME;
 
 /**
@@ -162,8 +160,8 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      */
     private boolean isFlowComplete(Map<String, Object> properties) {
 
-        return FLOW_END_NODE_ID.equals(properties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID))
-                && NODE_RESPONSE_STATUS_COMPLETE.equals(
+        return Constants.END_NODE_ID.equals(properties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID))
+                && Constants.COMPLETE.equals(
                         properties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS));
     }
 

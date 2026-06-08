@@ -294,7 +294,7 @@ public class MoesifHandlerUtils {
      * @param ipAddress  The client IP address; {@code NOT_AVAILABLE} when the handler can't resolve it.
      * @return An Object array containing the metadata in the expected order for Moesif events.
      */
-    public static Object[]getMetaDataArray(String orgUuid, String actionName, String userId,
+    public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId,
                                             String userAgent, String ipAddress) {
 
         Object[] metaData = new Object[6];

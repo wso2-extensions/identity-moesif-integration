@@ -68,16 +68,6 @@ public class MoesifHandlerConstants {
     public static final String URL_SUFFIX_ACTIONS = "actions";
     public static final String URL_SUFFIX_USERS = "users";
 
-    /**
-     * Node ID of the terminal node in a flow graph. Mirrors
-     * {@code org.wso2.carbon.identity.flow.mgt.Constants.END_NODE_ID}; kept as a local constant so this
-     * module does not require a framework version that defines it.
-     */
-    public static final String FLOW_END_NODE_ID = "END";
-
-    /** Node response status value published when a node has executed to completion. */
-    public static final String NODE_RESPONSE_STATUS_COMPLETE = "COMPLETE";
-
     /** Event name for user registration events. */
     public static final String POST_ADD_USER = "POST_ADD_USER";
 
