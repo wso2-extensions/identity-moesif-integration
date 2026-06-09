@@ -1,0 +1,20 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifUserLinkData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "Links the anonymous (flow context) identifier with the actual user ID via the Moesif Users API.",
+  "metaData": [
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "anonymous_id",
+      "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
+      "type": "STRING"
+    }
+  ]
+}

@@ -42,6 +42,8 @@ public class MoesifHandlerConstants {
             "org.wso2.is.analytics.stream.MoesifSessionData:1.0.0";
     public static final String TOKEN_ISSUANCE_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData:1.0.0";
+    public static final String USER_LINK_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifUserLinkData:1.0.0";
 
     public static final String USER_REGISTRATION_PUBLISHER_ENABLED = "moesifUserRegistrationPublisher.enable";
     public static final String USER_AUTHENTICATION_PUBLISHER_ENABLED = "moesifUserAuthenticationPublisher.enable";
@@ -58,6 +60,13 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
     public static final String ACTION_NAME_USER_SESSION = "User-Session";
     public static final String ACTION_NAME_TOKEN_ISSUANCE = "OAuth-Token-Issuance";
+
+    /**
+     * Moesif API URL suffixes. Published in the event metaData ({@code urlSuffix}) and consumed by the
+     * Moesif HTTP output adapter to route each event to the matching Moesif endpoint.
+     */
+    public static final String URL_SUFFIX_ACTIONS = "actions";
+    public static final String URL_SUFFIX_USERS = "users";
 
     /** Event name for user registration events. */
     public static final String POST_ADD_USER = "POST_ADD_USER";

@@ -13,7 +13,7 @@
       "type": "STRING"
     },
     {
-      "name": "userId",
+      "name": "anonymousId",
       "type": "STRING"
     },
     {
@@ -22,6 +22,10 @@
     },
     {
       "name": "ipAddress",
+      "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
       "type": "STRING"
     }
   ],
@@ -39,12 +43,12 @@
       "type": "STRING"
     },
     {
-      "name" : "currentNodeType",
-      "type" : "MAP"
+      "name": "currentNodeType",
+      "type": "STRING"
     },
     {
       "name": "flowId",
-      "type": "MAP"
+      "type": "STRING"
     },
     {
       "name": "tenantDomain",

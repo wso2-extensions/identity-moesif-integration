@@ -23,6 +23,10 @@
     {
       "name": "ipAddress",
       "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
+      "type": "STRING"
     }
   ],
   "payloadData": [
@@ -43,8 +47,8 @@
       "type": "STRING"
     },
     {
-      "name" : "userOnboardedMethod",
-      "type" : "STRING"
+      "name": "userOnboardedMethod",
+      "type": "STRING"
     },
     {
       "name": "userResidingOrgId",

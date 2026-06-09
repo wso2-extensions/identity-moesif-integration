@@ -18,13 +18,13 @@
 
 package org.wso2.carbon.identity.moesif.handler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.base.IdentityRuntimeException;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
@@ -37,8 +37,6 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
@@ -47,6 +45,7 @@ import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerCons
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_PUBLISHER_NAME;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.FLOW_STREAM_NAME;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_LINK_STREAM_NAME;
 
 /**
  * Event handler that publishes authentication login events to Moesif via the HTTP output event adapter.
@@ -93,8 +92,9 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      */
     private void publishFlowEventForNode(Map<String, Object> properties) {
 
-
-        String userId = resolveUserId((String) properties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
+        String anonymousId = buildAnonymousId(
+                (String) properties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
+        String userId = (String) properties.get(IdentityEventConstants.EventProperty.USER_ID);
         String flowType = (String) properties.get(IdentityEventConstants.EventProperty.FLOW_TYPE);
         String tenantDomain = (String) properties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN);
         try {
@@ -134,7 +134,10 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
 
             try {
                 FrameworkUtils.startTenantFlow(rootTenantDomain);
-                publishFlowStepToMoesif(payload, parentOrgId, actionName, userId);
+                publishFlowStepToMoesif(payload, parentOrgId, actionName, anonymousId);
+                if (isFlowComplete(properties) && StringUtils.isNotBlank(userId)) {
+                    publishUserLinkToMoesif(userId, anonymousId, parentOrgId);
+                }
             } finally {
                 FrameworkUtils.endTenantFlow();
             }
@@ -144,21 +147,33 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
     }
 
     /**
-     * Resolve the Moesif user_id from the flow user (username), falling back to the flow context identifier.
+     * Build the anonymous Moesif identifier from the flow context identifier.
      */
-    private String resolveUserId(String contextId) {
+    private String buildAnonymousId(String contextId) {
 
         return CTX + contextId;
     }
 
     /**
+     * Returns {@code true} when the step event signals that the flow has run to completion,
+     * i.e. the END node of the flow graph has executed with a COMPLETE response status.
+     */
+    private boolean isFlowComplete(Map<String, Object> properties) {
+
+        return Constants.END_NODE_ID.equals(properties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_ID))
+                && Constants.COMPLETE.equals(
+                        properties.get(IdentityEventConstants.EventProperty.CURRENT_NODE_RESPONSE_STATUS));
+    }
+
+    /**
      * Publish a single registration funnel step event payload to the Moesif stream.
      */
-    private void publishFlowStepToMoesif(Object[] payload, String orgUuid, String actionName, String userId) {
+    private void publishFlowStepToMoesif(Object[] payload, String orgUuid, String actionName,
+                                         String anonymousId) {
 
         try {
 
-            Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid, actionName, userId,
+            Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid, actionName, anonymousId,
                     null, NOT_AVAILABLE);
             org.wso2.carbon.databridge.commons.Event databridgeEvent =
                     new org.wso2.carbon.databridge.commons.Event(
@@ -173,6 +188,27 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
         }
     }
 
+    /**
+     * Publish a user-link event to the Moesif Users API once the flow has completed and the actual
+     * user ID is known, linking the anonymous (flow context) identifier with the actual user.
+     */
+    private void publishUserLinkToMoesif(String userId, String anonymousId, String orgUuid) {
+
+        try {
+            Object[] metadataArray = MoesifHandlerUtils.getUserLinkMetaDataArray(userId, anonymousId);
+            org.wso2.carbon.databridge.commons.Event databridgeEvent =
+                    new org.wso2.carbon.databridge.commons.Event(
+                            USER_LINK_STREAM_NAME, System.currentTimeMillis(),
+                            metadataArray, null, null);
+            MoesifHandlerDataHolder.getInstance().getPublisherService().publish(databridgeEvent);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Published Moesif user-link event for tenant: " + orgUuid);
+            }
+        } catch (IdentityRuntimeException e) {
+            LOG.error("Error while publishing Moesif user-link event for tenant: " + orgUuid, e);
+        }
+    }
+
     private boolean isEnabled() {
 
         if (this.configs.getModuleProperties() != null) {
@@ -180,7 +216,8 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
                     .getProperty(FLOW_PUBLISHER_ENABLED);
             if (Boolean.parseBoolean(handlerEnabled)) {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain, MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
+                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
+                        MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
             }
         }
         return false;

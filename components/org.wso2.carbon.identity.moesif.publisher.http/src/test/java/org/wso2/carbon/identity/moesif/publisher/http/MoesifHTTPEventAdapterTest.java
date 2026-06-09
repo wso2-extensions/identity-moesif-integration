@@ -31,15 +31,18 @@ import java.util.Map;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
  * Unit tests for {@link MoesifHTTPEventAdapter}.
  *
- * <p>The {@code buildBody} and {@code buildHeaders} methods are {@code protected}, so an inner
- * {@link TestableAdapter} subclass is used to expose them without reflection.
+ * <p>The {@code parseEvent}, {@code buildBody}, {@code buildHeaders} and {@code resolveUrl} methods are
+ * {@code protected}, so an inner {@link TestableAdapter} subclass is used to expose them without reflection.
  */
 public class MoesifHTTPEventAdapterTest {
+
+    private static final String BASE_URL = "https://api.moesif.net/v1";
 
     private TestableAdapter adapter;
 
@@ -49,10 +52,39 @@ public class MoesifHTTPEventAdapterTest {
         adapter = new TestableAdapter();
     }
 
+    // ── parseEvent ───────────────────────────────────────────────────────────────
+
+    /**
+     * The published message is deserialised once and the {@code event} member is returned.
+     */
+    @Test
+    public void testParseEventReturnsEventObject() {
+
+        JsonObject event = adapter.callParseEvent(buildEventJson("{\"company_id\":\"org-1\"}", "{}"));
+
+        assertNotNull(event);
+        assertTrue(event.has("metaData"));
+        assertTrue(event.has("payloadData"));
+    }
+
+    /**
+     * Messages without an "event" member, non-object messages and the JSON literal "null"
+     * must all yield {@code null} instead of throwing.
+     */
+    @Test
+    public void testParseEventToleratesMalformedMessages() {
+
+        assertNull(adapter.callParseEvent("{\"someOtherField\":\"value\"}"));
+        assertNull(adapter.callParseEvent("not json at all"));
+        assertNull(adapter.callParseEvent("null"));
+        assertNull(adapter.callParseEvent(null));
+        assertNull(adapter.callParseEvent("{\"event\":\"not-an-object\"}"));
+    }
+
     // ── buildBody ────────────────────────────────────────────────────────────────
 
     /**
-     * Happy-path: a full event message with both metaData and payloadData.
+     * Happy-path: a full event with both metaData and payloadData.
      * Expected:
      * <ul>
      *   <li>Each metaData field is promoted to the root of the result JSON.</li>
@@ -63,18 +95,20 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildBodyFlattensMetaDataAndNestsPayloadData() {
 
-        String input = buildEventJson(
+        JsonObject event = adapter.callParseEvent(buildEventJson(
                 /* metaData */ "{\"company_id\":\"org-123\",\"action_name\":\"USER_LOGIN\","
                         + "\"user_id\":\"john@example.com\",\"userAgent\":\"Mozilla/5.0\"}",
-                /* payloadData */ "{\"sessionId\":\"s-001\",\"success\":true}");
+                /* payloadData */ "{\"sessionId\":\"s-001\",\"success\":true}"));
 
-        String output = adapter.callBuildBody(input);
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
 
         // metaData fields promoted to root
         assertEquals(result.get("company_id").getAsString(), "org-123");
         assertEquals(result.get("action_name").getAsString(), "USER_LOGIN");
         assertEquals(result.get("user_id").getAsString(), "john@example.com");
+
+        // userAgent stays on the HTTP header only
+        assertFalse(result.has("userAgent"));
 
         // payloadData nested under "metadata"
         assertTrue(result.has("metadata"));
@@ -88,15 +122,13 @@ public class MoesifHTTPEventAdapterTest {
     }
 
     /**
-     * When the message JSON has no "event" field the result should only contain
-     * the "request" object with a "time" field and nothing else.
+     * A null event (message without an "event" member) produces only the "request" object
+     * with a "time" field and nothing else.
      */
     @Test
-    public void testBuildBodyNoEventFieldProducesOnlyRequestTime() {
+    public void testBuildBodyNullEventProducesOnlyRequestTime() {
 
-        String input = "{\"someOtherField\":\"value\"}";
-        String output = adapter.callBuildBody(input);
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(null)).getAsJsonObject();
 
         assertTrue(result.has("request"), "result must contain 'request'");
         assertTrue(result.getAsJsonObject("request").has("time"), "request must contain 'time'");
@@ -112,14 +144,12 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildBodyEventWithoutMetaData() {
 
-        String input = "{ \"event\": { \"payloadData\": {\"field1\":\"v1\"} } }";
-        String output = adapter.callBuildBody(input);
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
+        JsonObject event = adapter.callParseEvent("{ \"event\": { \"payloadData\": {\"field1\":\"v1\"} } }");
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
 
         assertTrue(result.has("metadata"));
         assertEquals(result.getAsJsonObject("metadata").get("field1").getAsString(), "v1");
         assertTrue(result.has("request"));
-        // No metaData fields at root (no company_id / action_name / user_id / userAgent)
         assertFalse(result.has("company_id"));
     }
 
@@ -130,9 +160,9 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildBodyEventWithoutPayloadData() {
 
-        String input = "{ \"event\": { \"metaData\": {\"company_id\":\"org-456\",\"action_name\":\"LOGOUT\"} } }";
-        String output = adapter.callBuildBody(input);
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
+        JsonObject event = adapter.callParseEvent(
+                "{ \"event\": { \"metaData\": {\"company_id\":\"org-456\",\"action_name\":\"LOGOUT\"} } }");
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
 
         assertEquals(result.get("company_id").getAsString(), "org-456");
         assertEquals(result.get("action_name").getAsString(), "LOGOUT");
@@ -146,9 +176,8 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildBodyRequestTimeIsValidIso8601Instant() {
 
-        String input = buildEventJson("{}", "{}");
-        String output = adapter.callBuildBody(input);
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
+        JsonObject event = adapter.callParseEvent(buildEventJson("{}", "{}"));
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
 
         String timeValue = result.getAsJsonObject("request").get("time").getAsString();
         // Should not throw DateTimeParseException
@@ -157,18 +186,65 @@ public class MoesifHTTPEventAdapterTest {
     }
 
     /**
-     * Passing the JSON string "null" causes GSON to return null for the parsed JsonObject;
-     * the method must return an empty JSON object rather than throwing.
+     * A meaningful ipAddress is nested under request.ipAddress, never at the root;
+     * a NOT_AVAILABLE ipAddress is omitted entirely.
      */
     @Test
-    public void testBuildBodyNullJsonReturnsEmptyObject() {
+    public void testBuildBodyIpAddressHandling() {
 
-        // GSON.fromJson("null", JsonObject.class) returns null in Gson 2.x
-        String output = adapter.callBuildBody("null");
-        assertNotNull(output);
-        // Must be valid JSON
-        JsonObject result = JsonParser.parseString(output).getAsJsonObject();
-        assertNotNull(result);
+        JsonObject event = adapter.callParseEvent(
+                buildEventJson("{\"ipAddress\":\"203.0.113.7\"}", "{}"));
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
+        assertFalse(result.has("ipAddress"));
+        assertEquals(result.getAsJsonObject("request").get("ipAddress").getAsString(), "203.0.113.7");
+
+        event = adapter.callParseEvent(buildEventJson("{\"ipAddress\":\"NOT_AVAILABLE\"}", "{}"));
+        result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
+        assertFalse(result.has("ipAddress"));
+        assertFalse(result.getAsJsonObject("request").has("ipAddress"));
+    }
+
+    /**
+     * Identity fields (userId / anonymous_id / anonymousId) are omitted from the body when blank or
+     * NOT_AVAILABLE — Moesif must never receive a placeholder identity — but pass through when they
+     * carry a meaningful value.
+     */
+    @Test
+    public void testBuildBodyOmitsBlankOrNotAvailableIdentityFields() {
+
+        // Placeholder values are dropped.
+        JsonObject event = adapter.callParseEvent(buildEventJson(
+                "{\"userId\":\"NOT_AVAILABLE\",\"anonymous_id\":\"\",\"anonymousId\":\"NOT_AVAILABLE\","
+                        + "\"company_id\":\"org-7\"}", "{}"));
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
+
+        assertFalse(result.has("userId"), "NOT_AVAILABLE userId must be omitted");
+        assertFalse(result.has("anonymous_id"), "blank anonymous_id must be omitted");
+        assertFalse(result.has("anonymousId"), "NOT_AVAILABLE anonymousId must be omitted");
+        assertEquals(result.get("company_id").getAsString(), "org-7");
+
+        // Meaningful values pass through to the root.
+        event = adapter.callParseEvent(buildEventJson(
+                "{\"userId\":\"user-1\",\"anonymous_id\":\"ctx_abc\",\"anonymousId\":\"ctx_def\"}", "{}"));
+        result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
+
+        assertEquals(result.get("userId").getAsString(), "user-1");
+        assertEquals(result.get("anonymous_id").getAsString(), "ctx_abc");
+        assertEquals(result.get("anonymousId").getAsString(), "ctx_def");
+    }
+
+    /**
+     * The urlSuffix metaData field is routing metadata only and must never appear in the body.
+     */
+    @Test
+    public void testBuildBodyExcludesUrlSuffix() {
+
+        JsonObject event = adapter.callParseEvent(
+                buildEventJson("{\"urlSuffix\":\"actions\",\"company_id\":\"org-9\"}", "{}"));
+        JsonObject result = JsonParser.parseString(adapter.callBuildBody(event)).getAsJsonObject();
+
+        assertFalse(result.has("urlSuffix"), "urlSuffix must not be published in the body");
+        assertEquals(result.get("company_id").getAsString(), "org-9");
     }
 
     // ── buildHeaders ─────────────────────────────────────────────────────────────
@@ -180,11 +256,9 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildHeadersAddsUserAgentWhenPresent() {
 
-        String input = buildEventJson(
-                "{\"userAgent\":\"Mozilla/5.0 (Macintosh)\",\"company_id\":\"org-1\"}",
-                "{}");
-
-        Map<String, String> headers = adapter.callBuildHeaders(input, new HashMap<>());
+        Map<String, String> headers = adapter.callBuildHeaders(
+                buildEventJson("{\"userAgent\":\"Mozilla/5.0 (Macintosh)\",\"company_id\":\"org-1\"}", "{}"),
+                new HashMap<>());
 
         assertNotNull(headers);
         assertTrue(headers.containsKey("User-Agent"),
@@ -199,11 +273,9 @@ public class MoesifHTTPEventAdapterTest {
     @Test
     public void testBuildHeadersAddsNotAvailableUserAgent() {
 
-        String input = buildEventJson(
-                "{\"userAgent\":\"NOT_AVAILABLE\",\"company_id\":\"org-2\"}",
-                "{}");
-
-        Map<String, String> headers = adapter.callBuildHeaders(input, new HashMap<>());
+        Map<String, String> headers = adapter.callBuildHeaders(
+                buildEventJson("{\"userAgent\":\"NOT_AVAILABLE\",\"company_id\":\"org-2\"}", "{}"),
+                new HashMap<>());
 
         assertNotNull(headers);
         assertTrue(headers.containsKey("User-Agent"),
@@ -212,55 +284,106 @@ public class MoesifHTTPEventAdapterTest {
     }
 
     /**
-     * When the event contains no metaData.userAgent field, the "User-Agent" header must
-     * not be injected.
+     * When the event contains no metaData.userAgent field, or a blank one, the "User-Agent"
+     * header must not be injected.
      */
     @Test
-    public void testBuildHeadersNoUserAgentWhenFieldAbsent() {
+    public void testBuildHeadersNoUserAgentWhenAbsentOrBlank() {
 
-        String input = buildEventJson("{\"company_id\":\"org-3\"}", "{}");
+        Map<String, String> headers = adapter.callBuildHeaders(
+                buildEventJson("{\"company_id\":\"org-3\"}", "{}"), new HashMap<>());
+        assertFalse(headers.containsKey("User-Agent"),
+                "User-Agent header must not be added when userAgent field is absent");
 
-        Map<String, String> headers = adapter.callBuildHeaders(input, new HashMap<>());
-
-        // Headers map may be null (super returned null and we got default empty map); either way
-        // User-Agent must not be present.
-        if (headers != null) {
-            assertFalse(headers.containsKey("User-Agent"),
-                    "User-Agent header must not be added when userAgent field is absent");
-        }
+        headers = adapter.callBuildHeaders(
+                buildEventJson("{\"userAgent\":\"\",\"company_id\":\"org-4\"}", "{}"), new HashMap<>());
+        assertFalse(headers.containsKey("User-Agent"),
+                "User-Agent header must not be added for a blank userAgent value");
     }
 
     /**
-     * When the event metaData.userAgent is a blank string ("") the header must not be injected
-     * because the value carries no useful information.
+     * Statically configured headers from the publisher configuration are parsed and merged.
      */
     @Test
-    public void testBuildHeadersBlankUserAgentNotAdded() {
+    public void testBuildHeadersParsesConfiguredHeaders() {
 
-        String input = buildEventJson("{\"userAgent\":\"\",\"company_id\":\"org-4\"}", "{}");
+        Map<String, String> dynamicProperties = new HashMap<>();
+        dynamicProperties.put("http.headers", "X-Custom:abc,X-Other:def");
 
-        Map<String, String> headers = adapter.callBuildHeaders(input, new HashMap<>());
+        Map<String, String> headers = adapter.callBuildHeaders(
+                buildEventJson("{\"userAgent\":\"UA\"}", "{}"), dynamicProperties);
 
-        if (headers != null) {
-            assertFalse(headers.containsKey("User-Agent"),
-                    "User-Agent header must not be added for a blank userAgent value");
-        }
+        assertEquals(headers.get("X-Custom"), "abc");
+        assertEquals(headers.get("X-Other"), "def");
+        assertEquals(headers.get("User-Agent"), "UA");
+    }
+
+    // ── resolveUrl ───────────────────────────────────────────────────────────────
+
+    /**
+     * A urlSuffix in the event metaData is appended to the base URL so the same publisher can
+     * target the Moesif Actions / Users / Companies APIs per event.
+     */
+    @Test
+    public void testResolveUrlAppendsSuffix() {
+
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"actions\"}"),
+                BASE_URL + "/actions");
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"users\"}"),
+                BASE_URL + "/users");
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"companies\"}"),
+                BASE_URL + "/companies");
     }
 
     /**
-     * When the message has no "event" field at all, no User-Agent header should be injected.
+     * Redundant slashes on either side of the join must not produce double slashes.
      */
     @Test
-    public void testBuildHeadersNoEventFieldProducesNoUserAgent() {
+    public void testResolveUrlNormalisesSlashes() {
 
-        String input = "{\"someField\":\"value\"}";
+        assertEquals(adapter.callResolveUrl(BASE_URL + "/", "{\"urlSuffix\":\"actions\"}"),
+                BASE_URL + "/actions");
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"/actions\"}"),
+                BASE_URL + "/actions");
+        assertEquals(adapter.callResolveUrl(BASE_URL + "/", "{\"urlSuffix\":\"/actions/\"}"),
+                BASE_URL + "/actions");
+    }
 
-        Map<String, String> headers = adapter.callBuildHeaders(input, new HashMap<>());
+    /**
+     * Multi-segment suffixes are allowed (e.g. versioned sub-resources).
+     */
+    @Test
+    public void testResolveUrlAllowsMultiSegmentSuffix() {
 
-        if (headers != null) {
-            assertFalse(headers.containsKey("User-Agent"),
-                    "User-Agent must not be injected when no event field is present in the message");
-        }
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"actions/batch\"}"),
+                BASE_URL + "/actions/batch");
+    }
+
+    /**
+     * Missing, blank and NOT_AVAILABLE suffixes leave the base URL untouched.
+     */
+    @Test
+    public void testResolveUrlWithoutUsableSuffixReturnsBaseUrl() {
+
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"\"}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"NOT_AVAILABLE\"}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, null), BASE_URL);
+    }
+
+    /**
+     * Suffix values that could rewrite the target authority, path or query (path traversal,
+     * query / fragment separators, spaces) are rejected and the base URL is used instead.
+     */
+    @Test
+    public void testResolveUrlRejectsUnsafeSuffixes() {
+
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"../admin\"}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"actions?x=1\"}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"actions#frag\"}"), BASE_URL);
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"act ions\"}"), BASE_URL);
+        // '.' is not path-safe per the allowed pattern, so a host-like suffix is rejected too.
+        assertEquals(adapter.callResolveUrl(BASE_URL, "{\"urlSuffix\":\"//evil.example\"}"), BASE_URL);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────────
@@ -298,14 +421,29 @@ public class MoesifHTTPEventAdapterTest {
             return config;
         }
 
-        String callBuildBody(Object message) {
+        JsonObject callParseEvent(Object message) {
 
-            return buildBody(message);
+            return parseEvent(message);
         }
 
-        Map<String, String> callBuildHeaders(Object message, Map<String, String> dynamicProperties) {
+        String callBuildBody(JsonObject event) {
 
-            return buildHeaders(message, dynamicProperties);
+            return buildBody(event);
+        }
+
+        Map<String, String> callBuildHeaders(String messageJson, Map<String, String> dynamicProperties) {
+
+            JsonObject event = parseEvent(messageJson);
+            JsonObject metaData = event != null && event.has("metaData") && event.get("metaData").isJsonObject()
+                    ? event.getAsJsonObject("metaData") : null;
+            return buildHeaders(metaData, dynamicProperties);
+        }
+
+        String callResolveUrl(String baseUrl, String metaDataJson) {
+
+            JsonObject metaData = metaDataJson != null
+                    ? JsonParser.parseString(metaDataJson).getAsJsonObject() : null;
+            return resolveUrl(baseUrl, metaData);
         }
     }
 }

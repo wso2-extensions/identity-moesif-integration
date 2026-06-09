@@ -65,8 +65,9 @@ public class MoesifConfigurationManagementServiceImplTest {
      * Canonical auth publisher resource name — used as the existence-check resource
      * in add/get/update/delete operations.
      */
-    private static final String AUTH_PUBLISHER_RESOURCE_NAME =
-            MoesifConfigurationConstants.AUTH_PUBLISHER_RESOURCE_NAME;
+    /** The user-link publisher resource is the canonical (always-deployed) resource. */
+    private static final String CANONICAL_PUBLISHER_RESOURCE_NAME =
+            MoesifConfigurationConstants.USER_LINK_PUBLISHER_RESOURCE_NAME;
 
     @BeforeMethod
     public void setUp() {
@@ -106,8 +107,8 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherAlreadyExistsThrows() throws Exception {
 
-        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(AUTH_PUBLISHER_RESOURCE_NAME)))
-                .thenReturn(buildResource(AUTH_PUBLISHER_RESOURCE_NAME));
+        when(mockConfigManager.getResource(eq(RESOURCE_TYPE), eq(CANONICAL_PUBLISHER_RESOURCE_NAME)))
+                .thenReturn(buildResource(CANONICAL_PUBLISHER_RESOURCE_NAME));
         service.addMoesifPublisher("apiKey", null);
     }
 
@@ -116,7 +117,7 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testGetPublisherNotFoundThrows() throws Exception {
 
-        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
+        stubResourceNotFound(CANONICAL_PUBLISHER_RESOURCE_NAME);
         service.getMoesifPublisher();
     }
 
@@ -160,14 +161,14 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test
     public void testGetPublishersReturnsMappedDTOs() throws Exception {
 
-        Resource resource = buildResource(AUTH_PUBLISHER_RESOURCE_NAME);
+        Resource resource = buildResource(CANONICAL_PUBLISHER_RESOURCE_NAME);
         Resources resources = new Resources(Collections.singletonList(resource));
         when(mockConfigManager.getResourcesByType(RESOURCE_TYPE)).thenReturn(resources);
 
         List<MoesifPublisherDTO> result = service.getMoesifPublishers();
         assertNotNull(result);
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getName(), AUTH_PUBLISHER_RESOURCE_NAME);
+        assertEquals(result.get(0).getName(), CANONICAL_PUBLISHER_RESOURCE_NAME);
     }
 
     // ── updateMoesifPublisher — input validation ──────────────────────────────
@@ -187,17 +188,8 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testUpdatePublisherApiKeyNotFoundThrows() throws Exception {
 
-        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
+        stubResourceNotFound(CANONICAL_PUBLISHER_RESOURCE_NAME);
         service.updateMoesifPublisher("newKey", null);
-    }
-
-    // ── deleteMoesifPublisher ─────────────────────────────────────────────────
-
-    @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
-    public void testDeletePublisherNotFoundThrows() throws Exception {
-
-        stubResourceNotFound(AUTH_PUBLISHER_RESOURCE_NAME);
-        service.deleteMoesifPublisher();
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
