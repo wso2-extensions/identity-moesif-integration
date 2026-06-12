@@ -24,6 +24,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.ThreadContext;
 import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.consent.mgt.core.model.PIICategoryValidity;
+import org.wso2.carbon.consent.mgt.core.model.Receipt;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptInput;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptPurposeInput;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptService;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptServiceInput;
 import org.wso2.carbon.identity.application.common.model.Property;
 
 import org.wso2.carbon.identity.event.IdentityEventConstants;
@@ -43,9 +49,11 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -159,6 +167,200 @@ public class MoesifHandlerUtils {
                 eventProperties.get(IdentityEventConstants.EventProperty.ERROR_CODE));
 
         return payloadData;
+    }
+
+    // Consent payload field positions for the MoesifConsentData stream. Only consent metadata
+    // (ids, category/purpose names, counts, policy url/version, service details) is published —
+    // never the actual PII value (e.g. the category name "email", never "abc@example.com").
+    private static final int CONSENT_PAYLOAD_SIZE = 20;
+    private static final int CONSENT_IDX_EVENT_TYPE = 0;
+    private static final int CONSENT_IDX_RECEIPT_ID = 1;
+    private static final int CONSENT_IDX_CONSENT_TYPE = 2;
+    private static final int CONSENT_IDX_AUTHZ_STATUS = 3;
+    private static final int CONSENT_IDX_STATE = 4;
+    private static final int CONSENT_IDX_SERVICE = 5;
+    private static final int CONSENT_IDX_SERVICE_DISPLAY_NAME = 6;
+    private static final int CONSENT_IDX_SERVICE_COUNT = 7;
+    private static final int CONSENT_IDX_PURPOSE_IDS = 8;
+    private static final int CONSENT_IDX_PURPOSE_COUNT = 9;
+    private static final int CONSENT_IDX_PII_CATEGORIES = 10;
+    private static final int CONSENT_IDX_PII_CATEGORY_COUNT = 11;
+    private static final int CONSENT_IDX_THIRD_PARTY_DISCLOSURE = 12;
+    private static final int CONSENT_IDX_POLICY_URL = 13;
+    private static final int CONSENT_IDX_POLICY_VERSION = 14;
+    private static final int CONSENT_IDX_JURISDICTION = 15;
+    private static final int CONSENT_IDX_LANGUAGE = 16;
+    private static final int CONSENT_IDX_COLLECTION_METHOD = 17;
+    private static final int CONSENT_IDX_TENANT_DOMAIN = 18;
+    private static final int CONSENT_IDX_PUBLISH_TIME = 19;
+    private static final String CONSENT_VALUE_SEPARATOR = ",";
+    private static final String CONSENT_TYPE_MIXED = "MIXED";
+
+    /**
+     * Build a Moesif consent payload for a consent-grant event ({@code POST_ADD_RECEIPT}) from the
+     * consent receipt input.
+     */
+    public static Object[] buildConsentGrantPayload(String eventType, ReceiptInput receiptInput,
+                                                    String tenantDomain) {
+
+        Object[] payload = defaultConsentPayload();
+        payload[CONSENT_IDX_EVENT_TYPE] = eventType;
+        payload[CONSENT_IDX_TENANT_DOMAIN] = getStringOrNotAvailable(tenantDomain);
+        if (receiptInput == null) {
+            return payload;
+        }
+
+        payload[CONSENT_IDX_RECEIPT_ID] = getStringOrNotAvailable(receiptInput.getConsentReceiptId());
+        payload[CONSENT_IDX_STATE] = getStringOrNotAvailable(receiptInput.getState());
+        payload[CONSENT_IDX_POLICY_URL] = getStringOrNotAvailable(receiptInput.getPolicyUrl());
+        payload[CONSENT_IDX_POLICY_VERSION] = getStringOrNotAvailable(receiptInput.getVersion());
+        payload[CONSENT_IDX_JURISDICTION] = getStringOrNotAvailable(receiptInput.getJurisdiction());
+        payload[CONSENT_IDX_LANGUAGE] = getStringOrNotAvailable(receiptInput.getLanguage());
+        payload[CONSENT_IDX_COLLECTION_METHOD] = getStringOrNotAvailable(receiptInput.getCollectionMethod());
+
+        List<ReceiptServiceInput> services = receiptInput.getServices();
+        if (services != null && !services.isEmpty()) {
+            payload[CONSENT_IDX_SERVICE_COUNT] = services.size();
+            ReceiptServiceInput primary = services.get(0);
+            payload[CONSENT_IDX_SERVICE] = getStringOrNotAvailable(primary.getService());
+            payload[CONSENT_IDX_SERVICE_DISPLAY_NAME] = getStringOrNotAvailable(primary.getSpDisplayName());
+
+            Set<String> purposeIds = new LinkedHashSet<>();
+            Set<String> consentTypes = new LinkedHashSet<>();
+            Set<String> piiCategories = new LinkedHashSet<>();
+            boolean thirdPartyDisclosure = false;
+            for (ReceiptServiceInput service : services) {
+                if (service == null || service.getPurposes() == null) {
+                    continue;
+                }
+                for (ReceiptPurposeInput purpose : service.getPurposes()) {
+                    if (purpose == null) {
+                        continue;
+                    }
+                    if (purpose.getPurposeId() != null) {
+                        purposeIds.add(String.valueOf(purpose.getPurposeId()));
+                    }
+                    if (StringUtils.isNotBlank(purpose.getConsentType())) {
+                        consentTypes.add(purpose.getConsentType());
+                    }
+                    if (Boolean.TRUE.equals(purpose.isThirdPartyDisclosure())) {
+                        thirdPartyDisclosure = true;
+                    }
+                    collectPiiCategoryNames(purpose.getPiiCategory(), piiCategories);
+                }
+            }
+            payload[CONSENT_IDX_PURPOSE_IDS] = joinOrNotAvailable(purposeIds);
+            payload[CONSENT_IDX_PURPOSE_COUNT] = purposeIds.size();
+            payload[CONSENT_IDX_PII_CATEGORIES] = joinOrNotAvailable(piiCategories);
+            payload[CONSENT_IDX_PII_CATEGORY_COUNT] = piiCategories.size();
+            payload[CONSENT_IDX_THIRD_PARTY_DISCLOSURE] = thirdPartyDisclosure;
+            payload[CONSENT_IDX_CONSENT_TYPE] = aggregateConsentType(consentTypes);
+        }
+        return payload;
+    }
+
+    /**
+     * Build a Moesif consent payload for a consent-authorize event ({@code POST_AUTHORIZE_CONSENT});
+     * carries the authorization (approve/deny) status. The user id is set on the event metadata.
+     */
+    public static Object[] buildConsentAuthorizePayload(String eventType, String receiptId, String authStatus,
+                                                        String tenantDomain) {
+
+        Object[] payload = defaultConsentPayload();
+        payload[CONSENT_IDX_EVENT_TYPE] = eventType;
+        payload[CONSENT_IDX_RECEIPT_ID] = getStringOrNotAvailable(receiptId);
+        payload[CONSENT_IDX_AUTHZ_STATUS] = getStringOrNotAvailable(authStatus);
+        payload[CONSENT_IDX_TENANT_DOMAIN] = getStringOrNotAvailable(tenantDomain);
+        return payload;
+    }
+
+    /**
+     * Build a Moesif consent payload for a revoke/delete event, enriched from the receipt when it could
+     * be looked up (revoke); otherwise only the receipt id is published (delete).
+     */
+    public static Object[] buildConsentRevokeOrDeletePayload(String eventType, String receiptId, Receipt receipt,
+                                                             String tenantDomain) {
+
+        Object[] payload = defaultConsentPayload();
+        payload[CONSENT_IDX_EVENT_TYPE] = eventType;
+        payload[CONSENT_IDX_RECEIPT_ID] = getStringOrNotAvailable(receiptId);
+        payload[CONSENT_IDX_TENANT_DOMAIN] = getStringOrNotAvailable(tenantDomain);
+        if (receipt == null) {
+            return payload;
+        }
+
+        payload[CONSENT_IDX_STATE] = getStringOrNotAvailable(receipt.getState());
+        payload[CONSENT_IDX_POLICY_URL] = getStringOrNotAvailable(receipt.getPolicyUrl());
+        payload[CONSENT_IDX_POLICY_VERSION] = getStringOrNotAvailable(receipt.getVersion());
+        payload[CONSENT_IDX_JURISDICTION] = getStringOrNotAvailable(receipt.getJurisdiction());
+        payload[CONSENT_IDX_LANGUAGE] = getStringOrNotAvailable(receipt.getLanguage());
+        payload[CONSENT_IDX_COLLECTION_METHOD] = getStringOrNotAvailable(receipt.getCollectionMethod());
+
+        List<ReceiptService> services = receipt.getServices();
+        if (services != null && !services.isEmpty()) {
+            payload[CONSENT_IDX_SERVICE_COUNT] = services.size();
+            ReceiptService primary = services.get(0);
+            payload[CONSENT_IDX_SERVICE] = getStringOrNotAvailable(primary.getService());
+            payload[CONSENT_IDX_SERVICE_DISPLAY_NAME] = getStringOrNotAvailable(primary.getSpDisplayName());
+        }
+        return payload;
+    }
+
+    /**
+     * Resolve the consenting user (PII principal) from the receipt input, or {@code NOT_AVAILABLE}.
+     */
+    public static String resolveConsentUserId(ReceiptInput receiptInput) {
+
+        if (receiptInput == null) {
+            return NOT_AVAILABLE;
+        }
+        return getStringOrNotAvailable(receiptInput.getPiiPrincipalId());
+    }
+
+    private static Object[] defaultConsentPayload() {
+
+        Object[] payload = new Object[CONSENT_PAYLOAD_SIZE];
+        Arrays.fill(payload, NOT_AVAILABLE);
+        payload[CONSENT_IDX_SERVICE_COUNT] = 0;
+        payload[CONSENT_IDX_PURPOSE_COUNT] = 0;
+        payload[CONSENT_IDX_PII_CATEGORY_COUNT] = 0;
+        payload[CONSENT_IDX_THIRD_PARTY_DISCLOSURE] = false;
+        payload[CONSENT_IDX_PUBLISH_TIME] = Instant.now().toString();
+        return payload;
+    }
+
+    // Collects the consented PII category names (e.g. "email"), not their values, for the payload.
+    private static void collectPiiCategoryNames(List<PIICategoryValidity> piiCategories, Set<String> collector) {
+
+        if (piiCategories == null) {
+            return;
+        }
+        for (PIICategoryValidity piiCategory : piiCategories) {
+            if (piiCategory == null) {
+                continue;
+            }
+            String name = StringUtils.isNotBlank(piiCategory.getName())
+                    ? piiCategory.getName() : piiCategory.getDisplayName();
+            if (StringUtils.isNotBlank(name)) {
+                collector.add(name);
+            }
+        }
+    }
+
+    private static String aggregateConsentType(Set<String> consentTypes) {
+
+        if (consentTypes.isEmpty()) {
+            return NOT_AVAILABLE;
+        }
+        if (consentTypes.size() == 1) {
+            return consentTypes.iterator().next();
+        }
+        return CONSENT_TYPE_MIXED;
+    }
+
+    private static String joinOrNotAvailable(Set<String> values) {
+
+        return values.isEmpty() ? NOT_AVAILABLE : String.join(CONSENT_VALUE_SEPARATOR, values);
     }
 
     /**

@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.moesif.handler.internal;
 
+import org.wso2.carbon.consent.mgt.core.ConsentManager;
 import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
@@ -32,6 +33,7 @@ public class MoesifHandlerDataHolder {
     private EventStreamService publisherService;
     private OrganizationManager organizationManager;
     private IdentityGovernanceService identityGovernanceService;
+    private ConsentManager consentManager;
 
     private MoesifHandlerDataHolder() {
 
@@ -70,5 +72,15 @@ public class MoesifHandlerDataHolder {
     public void setIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
 
         this.identityGovernanceService = identityGovernanceService;
+    }
+
+    public ConsentManager getConsentManager() {
+
+        return consentManager;
+    }
+
+    public void setConsentManager(ConsentManager consentManager) {
+
+        this.consentManager = consentManager;
     }
 }

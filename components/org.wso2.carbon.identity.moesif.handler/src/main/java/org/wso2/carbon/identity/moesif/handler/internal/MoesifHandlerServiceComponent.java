@@ -28,9 +28,11 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.consent.mgt.core.ConsentManager;
 import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
+import org.wso2.carbon.identity.moesif.handler.MoesifConsentDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifFlowDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifOAuthTokenIssuanceDataPublishHandler;
 import org.wso2.carbon.identity.moesif.handler.MoesifOrgSwitchDataPublishHandler;
@@ -67,6 +69,8 @@ public class MoesifHandlerServiceComponent {
                     new MoesifSessionDataPublisherHandler(), null);
             bundleContext.registerService(AbstractEventHandler.class,
                     new MoesifOAuthTokenIssuanceDataPublishHandler(), null);
+            bundleContext.registerService(AbstractEventHandler.class,
+                    new MoesifConsentDataPublishHandler(), null);
 
             if (log.isDebugEnabled()) {
                 log.debug("identity.moesif.handler bundle activated.");
@@ -133,5 +137,22 @@ public class MoesifHandlerServiceComponent {
     protected void unsetIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
 
         MoesifHandlerDataHolder.getInstance().setIdentityGovernanceService(null);
+    }
+
+    @Reference(
+            name = "consent.mgt.service",
+            service = ConsentManager.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConsentManager"
+    )
+    protected void setConsentManager(ConsentManager consentManager) {
+
+        MoesifHandlerDataHolder.getInstance().setConsentManager(consentManager);
+    }
+
+    protected void unsetConsentManager(ConsentManager consentManager) {
+
+        MoesifHandlerDataHolder.getInstance().setConsentManager(null);
     }
 }

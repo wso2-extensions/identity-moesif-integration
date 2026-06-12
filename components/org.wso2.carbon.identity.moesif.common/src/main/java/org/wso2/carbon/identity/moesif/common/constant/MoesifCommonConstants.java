@@ -54,6 +54,10 @@ public class MoesifCommonConstants {
     public static final String MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY =
             "moesif.tokenIssuance.publisher.enable";
 
+    /** Enables or disables the consent event publisher per tenant. */
+    public static final String MOESIF_CONSENT_PUBLISHER_ENABLED_PROPERTY =
+            "moesif.consent.publisher.enable";
+
     private MoesifCommonConstants() {
 
     }

@@ -41,7 +41,8 @@ public class MoesifGovernanceConnectorConfigTest {
             MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
             MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
             MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
-            MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY
+            MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY,
+            MoesifCommonConstants.MOESIF_CONSENT_PUBLISHER_ENABLED_PROPERTY
     };
 
     @BeforeClass
@@ -85,7 +86,7 @@ public class MoesifGovernanceConnectorConfigTest {
 
         String[] propertyNames = connectorConfig.getPropertyNames();
         assertNotNull(propertyNames);
-        assertEquals(propertyNames.length, 6);
+        assertEquals(propertyNames.length, 7);
         for (String key : HANDLER_PROPERTY_KEYS) {
             assertTrue(java.util.Arrays.asList(propertyNames).contains(key));
         }
@@ -118,7 +119,7 @@ public class MoesifGovernanceConnectorConfigTest {
 
         Map<String, String> nameMapping = connectorConfig.getPropertyNameMapping();
         assertNotNull(nameMapping);
-        assertEquals(nameMapping.size(), 6);
+        assertEquals(nameMapping.size(), 7);
         assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY),
                 "Enable Authentication Publisher");
         assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY),
@@ -127,6 +128,8 @@ public class MoesifGovernanceConnectorConfigTest {
                 "Enable Flow Publisher");
         assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_ORG_SWITCH_PUBLISHER_ENABLED_PROPERTY),
                 "Enable Org Switch Publisher");
+        assertEquals(nameMapping.get(MoesifCommonConstants.MOESIF_CONSENT_PUBLISHER_ENABLED_PROPERTY),
+                "Enable Consent Publisher");
     }
 
     @Test

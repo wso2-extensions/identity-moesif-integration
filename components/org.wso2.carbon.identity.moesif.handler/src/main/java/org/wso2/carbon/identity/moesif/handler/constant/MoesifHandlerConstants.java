@@ -29,6 +29,7 @@ public class MoesifHandlerConstants {
     public static final String ORG_SWITCH_PUBLISHER_NAME = "moesifOrgSwitchPublisher";
     public static final String USER_SESSION_PUBLISHER_NAME = "moesifUserSessionPublisher";
     public static final String TOKEN_ISSUANCE_PUBLISHER_NAME = "moesifOAuthTokenIssuancePublisher";
+    public static final String CONSENT_PUBLISHER_NAME = "moesifConsentPublisher";
 
     public static final String USER_AUTHENTICATION_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifUserAuthenticationData:1.0.0";
@@ -44,6 +45,8 @@ public class MoesifHandlerConstants {
             "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData:1.0.0";
     public static final String USER_LINK_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifUserLinkData:1.0.0";
+    public static final String CONSENT_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifConsentData:1.0.0";
 
     public static final String USER_REGISTRATION_PUBLISHER_ENABLED = "moesifUserRegistrationPublisher.enable";
     public static final String USER_AUTHENTICATION_PUBLISHER_ENABLED = "moesifUserAuthenticationPublisher.enable";
@@ -51,6 +54,7 @@ public class MoesifHandlerConstants {
     public static final String ORG_SWITCH_PUBLISHER_ENABLED = "moesifOrgSwitchPublisher.enable";
     public static final String USER_SESSION_PUBLISHER_ENABLE = "moesifUserSessionPublisher.enable";
     public static final String TOKEN_ISSUANCE_PUBLISHER_ENABLED = "moesifOAuthTokenIssuancePublisher.enable";
+    public static final String CONSENT_PUBLISHER_ENABLED = "moesifConsentPublisher.enable";
 
     public static final String ACTION_NAME_USER_AUTHENTICATION = "User-Authentication";
     public static final String ACTION_NAME_USER_REGISTRATION = "User-Registration";
@@ -60,6 +64,18 @@ public class MoesifHandlerConstants {
     public static final String ACTION_NAME_ORG_SWITCH = "Organization-Switch";
     public static final String ACTION_NAME_USER_SESSION = "User-Session";
     public static final String ACTION_NAME_TOKEN_ISSUANCE = "OAuth-Token-Issuance";
+
+    // Shared action name for all consent events; the operation is carried in the payload eventType.
+    public static final String ACTION_NAME_CONSENT = "Consent";
+
+    /** Consent operation published as the payload {@code eventType} field. */
+    public enum ConsentEventType {
+
+        GRANTED,
+        AUTHORIZED,
+        REVOKED,
+        DELETED
+    }
 
     /**
      * Moesif API URL suffixes. Published in the event metaData ({@code urlSuffix}) and consumed by the

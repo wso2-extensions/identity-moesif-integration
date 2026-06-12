@@ -165,6 +165,12 @@
                 <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
                 <version>${identity.organization.management.core.version}</version>
             </dependency>
+            <!-- Consent Management -->
+            <dependency>
+                <groupId>org.wso2.carbon.consent.mgt</groupId>
+                <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+                <version>${identity.consent.mgt.version}</version>
+            </dependency>
             <!-- Logging -->
             <dependency>
                 <groupId>org.wso2.org.ops4j.pax.logging</groupId>
@@ -327,7 +333,9 @@
         <identity.governance.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.governance.imp.pkg.version.range>
         <!-- Organization Management -->
         <identity.organization.management.core.version>1.5.2</identity.organization.management.core.version>
+        <identity.consent.mgt.version>2.9.8</identity.consent.mgt.version>
         <identity.organization.management.core.imp.pkg.version.range>[1.0.0, 3.0.0)</identity.organization.management.core.imp.pkg.version.range>
+        <identity.consent.mgt.imp.pkg.version.range>[2.0.0, 3.0.0)</identity.consent.mgt.imp.pkg.version.range>
         <!-- Data Publisher -->
         <identity.datapublisher.authentication.version>5.10.3</identity.datapublisher.authentication.version>
         <imp.pkg.version.data.publisher.authentication>[5.0.0, 6.0.0)</imp.pkg.version.data.publisher.authentication>

@@ -26,6 +26,7 @@
             <class name="org.wso2.carbon.identity.moesif.handler.MoesifUserAuthenticationDataPublishHandlerTest"/>
             <class name="org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtilsTest"/>
             <class name="org.wso2.carbon.identity.moesif.handler.MoesifOrgSwitchDataPublishHandlerTest"/>
+            <class name="org.wso2.carbon.identity.moesif.handler.MoesifConsentDataPublishHandlerTest"/>
         </classes>
     </test>
 </suite>

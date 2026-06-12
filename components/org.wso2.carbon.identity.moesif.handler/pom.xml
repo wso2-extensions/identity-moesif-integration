@@ -103,6 +103,10 @@
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.consent.mgt</groupId>
+            <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon.identity.governance</groupId>
             <artifactId>org.wso2.carbon.identity.governance</artifactId>
         </dependency>
@@ -191,6 +195,9 @@
                             org.wso2.carbon.event.stream.core; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.databridge.commons; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.identity.organization.management.*; version="${identity.organization.management.core.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core; version="${identity.consent.mgt.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core.model; version="${identity.consent.mgt.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core.exception; version="${identity.consent.mgt.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.recovery.*; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.user.api; version="${carbon.user.api.imp.pkg.version.range}",

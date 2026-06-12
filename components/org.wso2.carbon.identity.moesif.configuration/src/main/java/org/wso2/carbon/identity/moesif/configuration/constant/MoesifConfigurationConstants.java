@@ -50,6 +50,8 @@ public class MoesifConfigurationConstants {
             "IsAnalytics-Publisher-moesif-MoesifOAuthTokenIssuanceData";
     public static final String USER_LINK_PUBLISHER_RESOURCE_NAME =
             "IsAnalytics-Publisher-moesif-MoesifUserLinkData";
+    public static final String CONSENT_PUBLISHER_RESOURCE_NAME =
+            "IsAnalytics-Publisher-moesif-MoesifConsentData";
 
     // Per-publisher IS Analytics event stream names (matches stream definitions in handler module).
     public static final String AUTH_PUBLISHER_STREAM_NAME =
@@ -66,6 +68,8 @@ public class MoesifConfigurationConstants {
             "org.wso2.is.analytics.stream.MoesifOAuthTokenIssuanceData";
     public static final String USER_LINK_PUBLISHER_STREAM_NAME =
             "org.wso2.is.analytics.stream.MoesifUserLinkData";
+    public static final String CONSENT_PUBLISHER_STREAM_NAME =
+            "org.wso2.is.analytics.stream.MoesifConsentData";
 
     public static final String MOESIF_AUTHENTICATION_PUBLISHER = "moesif-authentication-publisher";
     public static final String MOESIF_REGISTRATION_PUBLISHER = "moesif-registration-publisher";
@@ -73,6 +77,7 @@ public class MoesifConfigurationConstants {
     public static final String MOESIF_ORG_SWITCH_PUBLISHER = "moesif-org-switch-publisher";
     public static final String MOESIF_SESSION_PUBLISHER = "moesif-session-publisher";
     public static final String MOESIF_TOKEN_ISSUANCE_PUBLISHER = "moesif-token-issuance-publisher";
+    public static final String MOESIF_CONSENT_PUBLISHER = "moesif-consent-publisher";
 
     /**
      * Publisher for user-link events (Moesif Users API). Not exposed as a separately toggleable

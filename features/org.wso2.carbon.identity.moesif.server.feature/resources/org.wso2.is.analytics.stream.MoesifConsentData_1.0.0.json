@@ -1,0 +1,114 @@
+{
+  "name": "org.wso2.is.analytics.stream.MoesifConsentData",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "metaData": [
+    {
+      "name": "companyId",
+      "type": "STRING"
+    },
+    {
+      "name": "actionName",
+      "type": "STRING"
+    },
+    {
+      "name": "userId",
+      "type": "STRING"
+    },
+    {
+      "name": "userAgent",
+      "type": "STRING"
+    },
+    {
+      "name": "ipAddress",
+      "type": "STRING"
+    },
+    {
+      "name": "urlSuffix",
+      "type": "STRING"
+    }
+  ],
+  "payloadData": [
+    {
+      "name": "eventType",
+      "type": "STRING"
+    },
+    {
+      "name": "receiptId",
+      "type": "STRING"
+    },
+    {
+      "name": "consentType",
+      "type": "STRING"
+    },
+    {
+      "name": "authStatus",
+      "type": "STRING"
+    },
+    {
+      "name": "state",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceName",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceDisplayName",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceCount",
+      "type": "INT"
+    },
+    {
+      "name": "purposeIds",
+      "type": "STRING"
+    },
+    {
+      "name": "purposeCount",
+      "type": "INT"
+    },
+    {
+      "name": "piiCategories",
+      "type": "STRING"
+    },
+    {
+      "name": "piiCategoryCount",
+      "type": "INT"
+    },
+    {
+      "name": "thirdPartyDisclosure",
+      "type": "BOOL"
+    },
+    {
+      "name": "policyUrl",
+      "type": "STRING"
+    },
+    {
+      "name": "policyVersion",
+      "type": "STRING"
+    },
+    {
+      "name": "jurisdiction",
+      "type": "STRING"
+    },
+    {
+      "name": "language",
+      "type": "STRING"
+    },
+    {
+      "name": "collectionMethod",
+      "type": "STRING"
+    },
+    {
+      "name": "tenantDomain",
+      "type": "STRING"
+    },
+    {
+      "name": "publishTime",
+      "type": "STRING"
+    }
+  ]
+}
