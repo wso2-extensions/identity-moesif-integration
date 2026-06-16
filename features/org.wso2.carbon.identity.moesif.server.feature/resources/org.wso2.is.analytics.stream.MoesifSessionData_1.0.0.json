@@ -89,6 +89,10 @@
     {
       "name": "_timestamp",
       "type": "LONG"
+    },
+    {
+      "name": "activeSessionCount",
+      "type": "STRING"
     }
   ]
 }

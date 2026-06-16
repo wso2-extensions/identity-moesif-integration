@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
+import java.util.Arrays;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
@@ -89,10 +90,23 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         AuthenticationContext authenticationContext = (AuthenticationContext) event.getEventProperties().get("context");
         SessionDataPublisherUtil.updateTimeStamps(sessionData, actionId);
 
-        // Build the same payload as the analytics session publisher.
-        Object[] payloadData = SessionDataPublisherUtil.isPublishingSessionCountEnabled()
-                ? SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true)
-                : SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
+        // Build the base session payload (same as the analytics session publisher), then always
+        // append the active session count as the trailing field. When session-count publishing is
+        // disabled we still emit the field as NOT_AVAILABLE so the response structure stays consistent.
+        Object[] basePayload = SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
+        Object activeSessionCount = NOT_AVAILABLE;
+        if (SessionDataPublisherUtil.isPublishingSessionCountEnabled()) {
+            Object[] withCount =
+                    SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true);
+            if (withCount != null && withCount.length > basePayload.length) {
+                Object count = withCount[withCount.length - 1];
+                if (count != null) {
+                    activeSessionCount = String.valueOf(count);
+                }
+            }
+        }
+        Object[] payloadData = Arrays.copyOf(basePayload, basePayload.length + 1);
+        payloadData[basePayload.length] = activeSessionCount;
 
         publishToMoesif(event, sessionData, authenticationContext, payloadData);
     }
