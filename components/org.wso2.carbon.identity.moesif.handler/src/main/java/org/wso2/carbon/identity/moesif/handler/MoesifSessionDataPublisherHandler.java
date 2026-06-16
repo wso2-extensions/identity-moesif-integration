@@ -90,10 +90,6 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         AuthenticationContext authenticationContext = (AuthenticationContext) event.getEventProperties().get("context");
         SessionDataPublisherUtil.updateTimeStamps(sessionData, actionId);
 
-        // Build the session payload once. When session-count publishing is enabled the analytics util
-        // already appends the active session count as the trailing field; when disabled we append
-        // NOT_AVAILABLE instead, so the response structure stays consistent either way. The
-        // activeSessionCount stream field is a STRING, so the count is normalised to its string form.
         Object[] payloadData;
         if (SessionDataPublisherUtil.isPublishingSessionCountEnabled()) {
             payloadData = SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true);
