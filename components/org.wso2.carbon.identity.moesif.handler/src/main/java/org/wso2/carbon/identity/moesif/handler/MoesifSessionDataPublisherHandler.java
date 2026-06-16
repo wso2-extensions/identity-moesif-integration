@@ -93,10 +93,6 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         Object[] payloadData;
         if (SessionDataPublisherUtil.isPublishingSessionCountEnabled()) {
             payloadData = SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true);
-            int countIndex = payloadData.length - 1;
-            payloadData[countIndex] = payloadData[countIndex] == null
-                    ? NOT_AVAILABLE
-                    : String.valueOf(payloadData[countIndex]);
         } else {
             Object[] basePayload = SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
             payloadData = Arrays.copyOf(basePayload, basePayload.length + 1);
