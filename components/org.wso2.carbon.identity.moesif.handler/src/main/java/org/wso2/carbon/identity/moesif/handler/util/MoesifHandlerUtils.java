@@ -381,10 +381,23 @@ public class MoesifHandlerUtils {
                 primaryOrgTenantDomain = OrganizationManagementUtil
                         .getRootOrgTenantDomainBySubOrgTenantDomain(tenantDomain);
             }
+            // Read both the master "enable all publishers" toggle and the specific publisher toggle in a
+            // single call. When the master toggle is on, every supported publisher is enabled regardless
+            // of its individual toggle.
             Property[] properties = MoesifHandlerDataHolder.getInstance().getIdentityGovernanceService()
-                    .getConfiguration(new String[]{governancePropertyKey}, primaryOrgTenantDomain);
-            return properties != null && properties.length > 0
-                    && Boolean.parseBoolean(properties[0].getValue());
+                    .getConfiguration(new String[]{MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                            governancePropertyKey}, primaryOrgTenantDomain);
+            if (properties == null) {
+                return false;
+            }
+            for (Property property : properties) {
+                if ((MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY.equals(property.getName())
+                        || governancePropertyKey.equals(property.getName()))
+                        && Boolean.parseBoolean(property.getValue())) {
+                    return true;
+                }
+            }
+            return false;
         } catch (OrganizationManagementException | IdentityGovernanceException e) {
             LOG.warn("Failed to determine Moesif enabled status for tenant '" + tenantDomain
                     + "'. Defaulting to disabled.", e);

@@ -75,6 +75,13 @@ public class MoesifCommonConstants {
             "moesif.session.publisher.enable";
 
     /** Enables or disables the OAuth token issuance event publisher per tenant. */
+    /**
+     * Master per-org toggle. When enabled, all supported Moesif publishers are treated as enabled for
+     * the organization regardless of the individual per-publisher toggles, and the GET response reports
+     * every supported publisher as enabled. When disabled, the individual per-publisher toggles apply.
+     */
+    public static final String MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY = "moesif.analytics.enable.all";
+
     public static final String MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY =
             "moesif.tokenIssuance.publisher.enable";
 

@@ -75,6 +75,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
     public Map<String, String> getPropertyNameMapping() {
 
         Map<String, String> nameMapping = new HashMap<>();
+        nameMapping.put(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                "Enable All Publishers");
         nameMapping.put(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 "Enable Authentication Publisher");
         nameMapping.put(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
@@ -94,6 +96,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
     public Map<String, String> getPropertyDescriptionMapping() {
 
         Map<String, String> descriptionMapping = new HashMap<>();
+        descriptionMapping.put(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                "Enable all supported Moesif publishers for this tenant, overriding the individual toggles.");
         descriptionMapping.put(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 "Enable or disable Moesif login/authentication event publishing for this tenant.");
         descriptionMapping.put(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
@@ -113,6 +117,7 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
     public String[] getPropertyNames() {
 
         return new String[]{
+                MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
                 MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
                 MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY,
@@ -126,6 +131,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
     public Properties getDefaultPropertyValues(String tenantDomain) throws IdentityGovernanceException {
 
         Properties defaultValues = new Properties();
+        defaultValues.put(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,
@@ -146,6 +153,8 @@ public class MoesifGovernanceConnectorConfig implements IdentityConnectorConfig 
             throws IdentityGovernanceException {
 
         Map<String, String> defaultValues = new HashMap<>();
+        defaultValues.put(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY,
                 Boolean.FALSE.toString());
         defaultValues.put(MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY,

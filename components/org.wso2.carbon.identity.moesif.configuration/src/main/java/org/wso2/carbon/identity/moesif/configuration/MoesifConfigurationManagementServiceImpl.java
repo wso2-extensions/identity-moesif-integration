@@ -91,7 +91,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     }
 
     @Override
-    public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
+    public MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement,
+                                                 boolean enableAllPublishers)
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
@@ -114,9 +115,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                 eventPublisherEnablement : Collections.emptyMap();
 
         storeApiKey(apiKeyValue);
-        updateAllGovernanceConfigs(resolved);
+        updateAllGovernanceConfigs(resolved, enableAllPublishers);
 
-        return buildResultDTO(eventPublisherEnablement);
+        return buildResultDTO(eventPublisherEnablement, enableAllPublishers);
     }
 
     @Override
@@ -143,7 +144,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
     }
 
     @Override
-    public MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
+    public MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement,
+                                                    boolean enableAllPublishers)
             throws MoesifConfigurationManagementException {
 
         validateIfMoesifEnabled();
@@ -164,9 +166,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         if (StringUtils.isNotBlank(apiKeyValue)) {
             storeApiKey(apiKeyValue);
         }
-        updateAllGovernanceConfigs(resolved);
+        updateAllGovernanceConfigs(resolved, enableAllPublishers);
 
-        return buildResultDTO(eventPublisherEnablement);
+        return buildResultDTO(eventPublisherEnablement, enableAllPublishers);
     }
 
     @Override
@@ -182,7 +184,7 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
                     MOESIF_PUBLISHER_CANONICAL_NAME), e);
         }
 
-        updateAllGovernanceConfigs(Collections.emptyMap());
+        updateAllGovernanceConfigs(Collections.emptyMap(), false);
     }
 
     /**
@@ -199,11 +201,13 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         return dto;
     }
 
-    private MoesifPublisherDTO buildResultDTO(Map<String, Boolean> eventPublisherEnablement) {
+    private MoesifPublisherDTO buildResultDTO(Map<String, Boolean> eventPublisherEnablement,
+                                              boolean enableAllPublishers) {
 
         MoesifPublisherDTO result = new MoesifPublisherDTO();
         result.setName(MOESIF_PUBLISHER_CANONICAL_NAME);
         result.setPublisherTypes(eventPublisherEnablement);
+        result.setEnableAllPublishers(enableAllPublishers);
         return result;
     }
 
@@ -279,11 +283,14 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
     }
 
-    private void updateAllGovernanceConfigs(Map<String, Boolean> publisherTypes) {
+    private void updateAllGovernanceConfigs(Map<String, Boolean> publisherTypes, boolean enableAllPublishers) {
 
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         Map<String, String> configProperties = new HashMap<>();
 
+        // Master toggle: when on, all supported publishers are enabled regardless of the individual map.
+        configProperties.put(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY,
+                String.valueOf(enableAllPublishers));
         // Iterate all known publisher type keys — keys absent from publisherTypes default to false.
         for (Map.Entry<String, String> entry : PUBLISHER_TYPE_PROPERTY_MAP.entrySet()) {
             boolean enabled = Boolean.TRUE.equals(publisherTypes.get(entry.getKey()));
@@ -301,17 +308,46 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
 
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         try {
-            String[] propertyNames = PUBLISHER_TYPE_PROPERTY_MAP.values().toArray(new String[0]);
+            String[] propertyNames = governancePropertyNames();
             Property[] properties =
                     MoesifConfigurationDataHolder.getInstance().getIdentityGovernanceService()
                             .getConfiguration(propertyNames, tenantDomain);
             if (properties == null) {
                 return;
             }
-            dto.setPublisherTypes(getPublisherTypes(properties));
+            boolean enableAll = false;
+            for (Property property : properties) {
+                if (MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY.equals(property.getName())) {
+                    enableAll = Boolean.parseBoolean(property.getValue());
+                    break;
+                }
+            }
+            dto.setEnableAllPublishers(enableAll);
+            if (enableAll) {
+                // Master toggle on: report every supported publisher as enabled, ignoring individual toggles.
+                Map<String, Boolean> allEnabled = new LinkedHashMap<>();
+                for (String typeKey : PUBLISHER_TYPE_PROPERTY_MAP.keySet()) {
+                    allEnabled.put(typeKey, Boolean.TRUE);
+                }
+                dto.setPublisherTypes(allEnabled);
+            } else {
+                dto.setPublisherTypes(getPublisherTypes(properties));
+            }
         } catch (IdentityGovernanceException e) {
             log.error(String.format(ErrorMessages.ERROR_READING_GOVERNANCE_CONFIG.getMessage(), tenantDomain), e);
         }
+    }
+
+    /**
+     * The governance property names read for a GET: the master "enable all" toggle plus every
+     * per-publisher toggle.
+     */
+    private static String[] governancePropertyNames() {
+
+        List<String> names = new ArrayList<>();
+        names.add(MoesifCommonConstants.MOESIF_ENABLE_ALL_PUBLISHERS_PROPERTY);
+        names.addAll(PUBLISHER_TYPE_PROPERTY_MAP.values());
+        return names.toArray(new String[0]);
     }
 
     private static Map<String, Boolean> getPublisherTypes(Property[] properties) {

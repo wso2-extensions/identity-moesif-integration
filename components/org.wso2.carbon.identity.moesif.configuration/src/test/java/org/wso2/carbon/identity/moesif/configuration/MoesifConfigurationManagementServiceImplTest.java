@@ -87,20 +87,20 @@ public class MoesifConfigurationManagementServiceImplTest {
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherBlankApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher("", null);
+        service.addMoesifPublisher("", null, false);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherNullApiKeyThrows() throws MoesifConfigurationManagementException {
 
-        service.addMoesifPublisher(null, null);
+        service.addMoesifPublisher(null, null, false);
     }
 
     @Test(expectedExceptions = MoesifConfigurationManagementClientException.class)
     public void testAddPublisherAlreadyExistsThrows() throws MoesifConfigurationManagementException {
 
         stubApiKeyConfigured(true);
-        service.addMoesifPublisher("apiKey", null);
+        service.addMoesifPublisher("apiKey", null, false);
     }
 
     // ── getMoesifPublisher ────────────────────────────────────────────────────
@@ -129,6 +129,6 @@ public class MoesifConfigurationManagementServiceImplTest {
     public void testUpdatePublisherNotFoundThrows() throws MoesifConfigurationManagementException {
 
         stubApiKeyConfigured(false);
-        service.updateMoesifPublisher("newKey", null);
+        service.updateMoesifPublisher("newKey", null, false);
     }
 }
