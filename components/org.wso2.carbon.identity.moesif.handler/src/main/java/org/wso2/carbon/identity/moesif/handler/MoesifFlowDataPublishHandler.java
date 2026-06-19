@@ -65,12 +65,13 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
     @Override
     public void handleEvent(Event event) {
 
-        if (!isEnabled()) {
+        MoesifHandlerUtils.PublishDecision decision = resolvePublishDecision();
+        if (!decision.shouldPublish()) {
             return;
         }
 
         if (IdentityEventConstants.Event.POST_FLOW_EXECUTION_STEP_EVENT.equals(event.getEventName())) {
-            handleFlowStepEvent(event);
+            handleFlowStepEvent(event, decision.isAnalyticsEnabled());
         } else {
             LOG.error("Event " + event.getEventName() + " cannot be handled");
         }
@@ -80,17 +81,17 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      * Handle the POST_FLOW_EXECUTION_STEP_EVENT, which is fired after every step execution in the flow.
      * We publish a Moesif funnel event for each step, with properties resolved from the flow context.
      */
-    private void handleFlowStepEvent(Event event) {
+    private void handleFlowStepEvent(Event event, boolean analyticsEnabled) {
 
         Map<String, Object> properties = event.getEventProperties();
 
-        publishFlowEventForNode(properties);
+        publishFlowEventForNode(properties, analyticsEnabled);
     }
 
     /**
      * Build and publish a single funnel event for the given node.
      */
-    private void publishFlowEventForNode(Map<String, Object> properties) {
+    private void publishFlowEventForNode(Map<String, Object> properties, boolean analyticsEnabled) {
 
         String anonymousId = buildAnonymousId(
                 (String) properties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
@@ -134,9 +135,9 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
 
             try {
                 FrameworkUtils.startTenantFlow(rootTenantDomain);
-                publishFlowStepToMoesif(payload, parentOrgId, actionName, anonymousId);
+                publishFlowStepToMoesif(payload, parentOrgId, actionName, anonymousId, analyticsEnabled);
                 if (isFlowComplete(properties) && StringUtils.isNotBlank(userId)) {
-                    publishUserLinkToMoesif(userId, anonymousId, parentOrgId);
+                    publishUserLinkToMoesif(userId, anonymousId, parentOrgId, analyticsEnabled);
                 }
             } finally {
                 FrameworkUtils.endTenantFlow();
@@ -169,12 +170,12 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      * Publish a single registration funnel step event payload to the Moesif stream.
      */
     private void publishFlowStepToMoesif(Object[] payload, String orgUuid, String actionName,
-                                         String anonymousId) {
+                                         String anonymousId, boolean analyticsEnabled) {
 
         try {
 
             Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid, actionName, anonymousId,
-                    null, NOT_AVAILABLE);
+                    null, NOT_AVAILABLE, analyticsEnabled);
             org.wso2.carbon.databridge.commons.Event databridgeEvent =
                     new org.wso2.carbon.databridge.commons.Event(
                             FLOW_STREAM_NAME, System.currentTimeMillis(),
@@ -192,10 +193,11 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      * Publish a user-link event to the Moesif Users API once the flow has completed and the actual
      * user ID is known, linking the anonymous (flow context) identifier with the actual user.
      */
-    private void publishUserLinkToMoesif(String userId, String anonymousId, String orgUuid) {
+    private void publishUserLinkToMoesif(String userId, String anonymousId, String orgUuid,
+                                         boolean analyticsEnabled) {
 
         try {
-            Object[] metadataArray = MoesifHandlerUtils.getUserLinkMetaDataArray(userId, anonymousId);
+            Object[] metadataArray = MoesifHandlerUtils.getUserLinkMetaDataArray(userId, anonymousId, analyticsEnabled);
             org.wso2.carbon.databridge.commons.Event databridgeEvent =
                     new org.wso2.carbon.databridge.commons.Event(
                             USER_LINK_STREAM_NAME, System.currentTimeMillis(),
@@ -209,17 +211,14 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
         }
     }
 
-    private boolean isEnabled() {
+    private MoesifHandlerUtils.PublishDecision resolvePublishDecision() {
 
-        if (this.configs.getModuleProperties() != null) {
-            String handlerEnabled = this.configs.getModuleProperties()
-                    .getProperty(FLOW_PUBLISHER_ENABLED);
-            if (Boolean.parseBoolean(handlerEnabled)) {
-                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
-            }
+        if (this.configs.getModuleProperties() == null
+                || !Boolean.parseBoolean(this.configs.getModuleProperties().getProperty(FLOW_PUBLISHER_ENABLED))) {
+            return MoesifHandlerUtils.doNotPublish();
         }
-        return false;
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        return MoesifHandlerUtils.resolvePublishDecision(tenantDomain,
+                MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY);
     }
 }

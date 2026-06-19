@@ -5,10 +5,10 @@
     <from streamName="org.wso2.is.analytics.stream.MoesifUserAuthenticationData" version="1.0.0"/>
     <mapping customMapping="disable" type="json" />
     <to eventAdapterType="moesif-http">
-        <property name="http.client.method">httpPost</property>
-        <property name="http.url"></property>
-        <property name="http.authType">API_KEY</property>
-        <property name="http.apiKeyHeader">X-Moesif-Application-Id</property>
-        <property name="http.secret.provider">MOESIF_SECRET_PROVIDER</property>
+        <property name="http.client.method">{{analytics.moesif.client_method}}</property>
+        <property name="http.url">{{analytics.moesif.provider_url}}</property>
+        <property name="http.authType">{{analytics.moesif.auth_type}}</property>
+        <property name="http.apiKeyHeader">{{analytics.moesif.api_key_header}}</property>
+        <property name="http.secret.provider">{{analytics.moesif.secret_provider}}</property>
     </to>
 </eventPublisher>

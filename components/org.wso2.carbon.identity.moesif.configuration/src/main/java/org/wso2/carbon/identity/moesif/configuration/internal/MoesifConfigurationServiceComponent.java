@@ -28,7 +28,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.identity.configuration.mgt.core.ConfigurationManager;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
 import org.wso2.carbon.identity.governance.common.IdentityConnectorConfig;
 import org.wso2.carbon.identity.moesif.configuration.MoesifConfigurationManagementService;
@@ -36,7 +35,6 @@ import org.wso2.carbon.identity.moesif.configuration.MoesifConfigurationManageme
 import org.wso2.carbon.identity.moesif.configuration.MoesifGovernanceConnectorConfig;
 import org.wso2.carbon.identity.secret.mgt.core.SecretManager;
 import org.wso2.carbon.identity.secret.mgt.core.SecretResolveManager;
-import org.wso2.carbon.identity.tenant.resource.manager.core.ResourceManager;
 
 /**
  * OSGi service component for Moesif configuration management.
@@ -73,40 +71,6 @@ public class MoesifConfigurationServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("identity.moesif.configuration bundle deactivated.");
         }
-    }
-
-    @Reference(
-            name = "ConfigurationManager",
-            service = ConfigurationManager.class,
-            cardinality = ReferenceCardinality.MANDATORY,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetConfigurationManager"
-    )
-    protected void setConfigurationManager(ConfigurationManager configurationManager) {
-
-        MoesifConfigurationDataHolder.getInstance().setConfigurationManager(configurationManager);
-    }
-
-    protected void unsetConfigurationManager(ConfigurationManager configurationManager) {
-
-        MoesifConfigurationDataHolder.getInstance().setConfigurationManager(null);
-    }
-
-    @Reference(
-            name = "resource.manager",
-            service = ResourceManager.class,
-            cardinality = ReferenceCardinality.OPTIONAL,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetResourceManager"
-    )
-    protected void setResourceManager(ResourceManager resourceManager) {
-
-        MoesifConfigurationDataHolder.getInstance().setResourceManager(resourceManager);
-    }
-
-    protected void unsetResourceManager(ResourceManager resourceManager) {
-
-        MoesifConfigurationDataHolder.getInstance().setResourceManager(null);
     }
 
     @Reference(

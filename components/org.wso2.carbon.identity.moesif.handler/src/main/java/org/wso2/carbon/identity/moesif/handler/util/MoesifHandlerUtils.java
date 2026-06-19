@@ -26,9 +26,11 @@ import org.apache.logging.log4j.ThreadContext;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.common.model.Property;
 
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.governance.IdentityGovernanceException;
+import org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants;
 import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
@@ -292,18 +294,23 @@ public class MoesifHandlerUtils {
      * @param userId     The ID of the user associated with the event, if applicable.
      * @param userAgent  The User-Agent string from the HTTP request, if available.
      * @param ipAddress  The client IP address; {@code NOT_AVAILABLE} when the handler can't resolve it.
+     * @param analyticsEnabled Whether Moesif analytics is enabled for the event's organisation (the per-org
+     *                   governance decision). Carried so the downstream event router can decide whether to
+     *                   forward to Moesif; the HTTP publisher only emits it when the server-level
+     *                   {@code AlwaysPublish} switch is on.
      * @return An Object array containing the metadata in the expected order for Moesif events.
      */
     public static Object[] getMetaDataArray(String orgUuid, String actionName, String userId,
-                                            String userAgent, String ipAddress) {
+                                            String userAgent, String ipAddress, boolean analyticsEnabled) {
 
-        Object[] metaData = new Object[6];
+        Object[] metaData = new Object[7];
         metaData[0] = orgUuid != null ? orgUuid : NOT_AVAILABLE;
         metaData[1] = actionName != null ? actionName : NOT_AVAILABLE;
         metaData[2] = userId != null ? userId : NOT_AVAILABLE;
         metaData[3] = userAgent != null ? userAgent : NOT_AVAILABLE;
         metaData[4] = ipAddress != null ? ipAddress : NOT_AVAILABLE;
         metaData[5] = URL_SUFFIX_ACTIONS;
+        metaData[6] = analyticsEnabled;
         return metaData;
     }
 
@@ -318,14 +325,17 @@ public class MoesifHandlerUtils {
      *
      * @param userId      The actual user ID resolved at flow completion.
      * @param anonymousId The anonymous identifier the flow events were published under.
+     * @param analyticsEnabled Whether Moesif analytics is enabled for the event's organisation; see
+     *                    {@link #getMetaDataArray}.
      * @return An Object array containing the metadata in the expected order for user-link events.
      */
-    public static Object[] getUserLinkMetaDataArray(String userId, String anonymousId) {
+    public static Object[] getUserLinkMetaDataArray(String userId, String anonymousId, boolean analyticsEnabled) {
 
-        Object[] metaData = new Object[3];
+        Object[] metaData = new Object[4];
         metaData[0] = userId != null ? userId : NOT_AVAILABLE;
         metaData[1] = anonymousId != null ? anonymousId : NOT_AVAILABLE;
         metaData[2] = URL_SUFFIX_USERS;
+        metaData[3] = analyticsEnabled;
         return metaData;
     }
 
@@ -379,6 +389,87 @@ public class MoesifHandlerUtils {
             LOG.warn("Failed to determine Moesif enabled status for tenant '" + tenantDomain
                     + "'. Defaulting to disabled.", e);
             return false;
+        }
+    }
+
+    /**
+     * Reads the server-level {@code Analytics.Moesif.AlwaysPublish} switch from the deployment
+     * configuration.
+     *
+     * <p>When {@code true}, handlers publish every event to the configured provider (the event router)
+     * regardless of the per-org governance toggle, and stamp the governance decision into the event so the
+     * router can gate Moesif forwarding while always sending to Azure Event Hub. When {@code false} (the
+     * default — e.g. on-prem) handlers gate publishing on the per-org governance toggle as before.</p>
+     *
+     * @return {@code true} only when the switch is explicitly configured to {@code "true"}.
+     */
+    public static boolean isAlwaysPublishEnabled() {
+
+        return Boolean.parseBoolean(IdentityUtil.getProperty(MoesifCommonConstants.ALWAYS_PUBLISH_CONFIG));
+    }
+
+    /**
+     * Resolves whether a handler should publish the current event and the {@code analyticsEnabled} value to
+     * stamp on it, combining the per-org governance toggle with the server-level
+     * {@code AlwaysPublish} switch. Callers must first confirm the handler's module property is
+     * enabled (and only then resolve the tenant domain) so the disabled path never touches the carbon
+     * context — use {@link #doNotPublish()} for the module-disabled case.
+     *
+     * <ul>
+     *   <li>{@code AlwaysPublish} on → always publish; {@code analyticsEnabled} reflects the per-org
+     *       governance toggle so the router can decide on Moesif forwarding.</li>
+     *   <li>{@code AlwaysPublish} off → publish only when the governance toggle is enabled (today's
+     *       behaviour); {@code analyticsEnabled} mirrors that decision but the HTTP publisher drops the field
+     *       from the wire in this mode.</li>
+     * </ul>
+     *
+     * @param tenantDomain          tenant domain of the current event
+     * @param governancePropertyKey the per-handler governance connector property key
+     * @return the resolved {@link PublishDecision}
+     */
+    public static PublishDecision resolvePublishDecision(String tenantDomain, String governancePropertyKey) {
+
+        boolean governanceEnabled = isHandlerEnabledForPrimaryTenant(tenantDomain, governancePropertyKey);
+        if (isAlwaysPublishEnabled()) {
+            return new PublishDecision(true, governanceEnabled);
+        }
+        return new PublishDecision(governanceEnabled, governanceEnabled);
+    }
+
+    /**
+     * Decision used when the handler's module property is disabled: the event is not published and no
+     * carbon context / governance lookup is performed.
+     *
+     * @return a {@link PublishDecision} that does not publish.
+     */
+    public static PublishDecision doNotPublish() {
+
+        return new PublishDecision(false, false);
+    }
+
+    /**
+     * Outcome of {@link #resolvePublishDecision}: whether to publish the event and the value to stamp into
+     * the event's {@code analyticsEnabled} metaData field.
+     */
+    public static final class PublishDecision {
+
+        private final boolean shouldPublish;
+        private final boolean analyticsEnabled;
+
+        private PublishDecision(boolean shouldPublish, boolean analyticsEnabled) {
+
+            this.shouldPublish = shouldPublish;
+            this.analyticsEnabled = analyticsEnabled;
+        }
+
+        public boolean shouldPublish() {
+
+            return shouldPublish;
+        }
+
+        public boolean isAnalyticsEnabled() {
+
+            return analyticsEnabled;
         }
     }
 

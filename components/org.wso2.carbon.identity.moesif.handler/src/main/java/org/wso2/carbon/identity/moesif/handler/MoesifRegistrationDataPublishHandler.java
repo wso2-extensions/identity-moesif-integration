@@ -63,7 +63,8 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
     @Override
     public void handleEvent(Event event) throws IdentityEventException {
 
-        if (!isEnabled()) {
+        MoesifHandlerUtils.PublishDecision decision = resolvePublishDecision();
+        if (!decision.shouldPublish()) {
             return;
         }
 
@@ -102,7 +103,8 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
             }
         }
         Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(parentOrgId,
-                ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE), NOT_AVAILABLE);
+                ACTION_NAME_USER_REGISTRATION, userId, userAgent.orElse(NOT_AVAILABLE), NOT_AVAILABLE,
+                decision.isAnalyticsEnabled());
 
         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                 new org.wso2.carbon.databridge.commons.Event(
@@ -119,17 +121,14 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
         }
     }
 
-    private boolean isEnabled() {
+    private MoesifHandlerUtils.PublishDecision resolvePublishDecision() {
 
-        if (this.configs.getModuleProperties() != null) {
-            String handlerEnabled = this.configs.getModuleProperties()
-                    .getProperty(USER_REGISTRATION_PUBLISHER_ENABLED);
-            if (Boolean.parseBoolean(handlerEnabled)) {
-                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
-            }
+        if (this.configs.getModuleProperties() == null
+                || !Boolean.parseBoolean(this.configs.getModuleProperties().getProperty(USER_REGISTRATION_PUBLISHER_ENABLED))) {
+            return MoesifHandlerUtils.doNotPublish();
         }
-        return false;
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        return MoesifHandlerUtils.resolvePublishDecision(tenantDomain,
+                MoesifCommonConstants.MOESIF_REGISTRATION_PUBLISHER_ENABLED_PROPERTY);
     }
 }

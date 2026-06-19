@@ -30,6 +30,30 @@ public class MoesifCommonConstants {
     /** Sentinel value used in payloads when a field cannot be resolved. */
     public static final String NOT_AVAILABLE = "NOT_AVAILABLE";
 
+    /**
+     * Server-level (deployment.toml) switch under the {@code [analytics.moesif]} section.
+     *
+     * <p>When enabled, the Moesif event handlers always publish events to the configured provider
+     * (the downstream event router) regardless of the per-org governance toggle, and stamp the
+     * per-org governance decision into the event's {@code analyticsEnabled} metaData field. The
+     * event router always forwards to Azure Event Hub and uses {@code analyticsEnabled} to decide
+     * whether to additionally forward the event to Moesif.</p>
+     *
+     * <p>When disabled (default — e.g. on-prem deployments without an event router) the handlers
+     * gate publishing on the per-org governance toggle as before and the {@code analyticsEnabled}
+     * indicator carries {@link #NOT_AVAILABLE} (it is not consumed downstream in this mode).</p>
+     */
+    public static final String ALWAYS_PUBLISH_CONFIG = "Analytics.Moesif.AlwaysPublish";
+
+    /**
+     * Name of the {@code metaData} field that carries the per-org analytics (Moesif publishing) decision.
+     *
+     * <p>Handlers stamp this with the per-org governance toggle value. The HTTP publisher includes it in
+     * the outgoing body only when {@link #ALWAYS_PUBLISH_CONFIG} is enabled; the downstream event
+     * router uses it to decide whether to forward the event to Moesif (Azure Event Hub always receives it).</p>
+     */
+    public static final String ANALYTICS_ENABLED_FIELD = "analyticsEnabled";
+
     /** Enables or disables the authentication (login) event publisher per tenant. */
     public static final String MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY =
             "moesif.authentication.publisher.enable";

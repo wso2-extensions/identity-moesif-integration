@@ -44,19 +44,11 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.configuration.mgt.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.secret.mgt.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.governance</groupId>
             <artifactId>org.wso2.carbon.identity.governance</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.governance</groupId>
-            <artifactId>org.wso2.carbon.identity.tenant.resource.manager</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.org.ops4j.pax.logging</groupId>
@@ -99,16 +91,10 @@
                             org.apache.commons.logging; version="${commons-logging.osgi.version.range}",
                             org.wso2.carbon.context; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.identity.core.util; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.configuration.mgt.core; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.configuration.mgt.core.exception; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.configuration.mgt.core.model; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.configuration.mgt.core.constant; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon.identity.secret.mgt.core; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.secret.mgt.core.exception; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.secret.mgt.core.model; version="${carbon.identity.framework.imp.pkg.version.range}",
                             org.wso2.carbon.identity.application.common.model; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.tenant.resource.manager.core; version="${identity.governance.imp.pkg.version.range}",
-                            org.wso2.carbon.identity.tenant.resource.manager.exception; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.governance.common; version="${identity.governance.imp.pkg.version.range}",
                             com.fasterxml.jackson.databind; version="${com.fasterxml.jackson.annotation.version.range}",
