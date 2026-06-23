@@ -64,26 +64,28 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
     @Override
     public void handleEvent(Event event) {
 
-        if (!isEnabled()) {
+        MoesifHandlerUtils.PublishDecision decision = resolvePublishDecision();
+        if (!decision.shouldPublish()) {
             return;
         }
+        boolean analyticsEnabled = decision.isAnalyticsEnabled();
 
         if (IdentityEventConstants.EventName.AUTHENTICATION_STEP_SUCCESS.name().equals(event.getEventName()) ||
                 IdentityEventConstants.EventName.AUTHENTICATION_STEP_FAILURE.name().equals(event.getEventName())) {
             AuthenticationData authenticationData = AnalyticsLoginDataPublisherUtils.buildAuthnDataForAuthnStepV110(event, true);
-            publishToMoesif(authenticationData, event);
+            publishToMoesif(authenticationData, event, analyticsEnabled);
         } else if (IdentityEventConstants.EventName.AUTHENTICATION_SUCCESS.name().equals(event.getEventName()) ||
                 IdentityEventConstants.EventName.AUTHENTICATION_FAILURE.name().equals(event.getEventName())) {
             AuthenticationData authenticationData = AnalyticsLoginDataPublisherUtils
                     .buildAuthnDataForAuthenticationV110(event, true);
-            publishToMoesif(authenticationData, event);
+            publishToMoesif(authenticationData, event, analyticsEnabled);
         } else {
             LOG.error("Event " + event.getEventName() + " cannot be handled");
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void publishToMoesif(AuthenticationData authenticationData, Event event) {
+    private void publishToMoesif(AuthenticationData authenticationData, Event event, boolean analyticsEnabled) {
 
         try {
             Object[] payloadData = populatePayloadData(authenticationData, true);
@@ -103,7 +105,7 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
                                 .resolveOrganizationId(publishingDomain);
                         Object[] metadataArray = MoesifHandlerUtils.getMetaDataArray(orgUuid,
                                 MoesifHandlerConstants.ACTION_NAME_USER_AUTHENTICATION, authenticationData.getUserId(),
-                                userAgent.orElse(MoesifCommonConstants.NOT_AVAILABLE), ipAddress);
+                                userAgent.orElse(MoesifCommonConstants.NOT_AVAILABLE), ipAddress, analyticsEnabled);
 
                         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                                 new org.wso2.carbon.databridge.commons.Event(
@@ -127,17 +129,14 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
         }
     }
 
-    private boolean isEnabled() {
+    private MoesifHandlerUtils.PublishDecision resolvePublishDecision() {
 
-        if (this.configs.getModuleProperties() != null) {
-            String handlerEnabled = this.configs.getModuleProperties()
-                    .getProperty(USER_AUTHENTICATION_PUBLISHER_ENABLED);
-            if (Boolean.parseBoolean(handlerEnabled)) {
-                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
-            }
+        if (this.configs.getModuleProperties() == null
+                || !Boolean.parseBoolean(this.configs.getModuleProperties().getProperty(USER_AUTHENTICATION_PUBLISHER_ENABLED))) {
+            return MoesifHandlerUtils.doNotPublish();
         }
-        return false;
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        return MoesifHandlerUtils.resolvePublishDecision(tenantDomain,
+                MoesifCommonConstants.MOESIF_AUTHENTICATION_PUBLISHER_ENABLED_PROPERTY);
     }
 }

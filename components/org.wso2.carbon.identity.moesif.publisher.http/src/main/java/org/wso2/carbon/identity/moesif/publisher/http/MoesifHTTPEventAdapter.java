@@ -43,6 +43,7 @@ import org.wso2.carbon.event.output.adapter.core.exception.ConnectionUnavailable
 import org.wso2.carbon.event.output.adapter.core.exception.OutputEventAdapterException;
 import org.wso2.carbon.event.output.adapter.core.exception.OutputEventAdapterRuntimeException;
 import org.wso2.carbon.event.output.adapter.core.exception.TestConnectionNotSupportedException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.secret.mgt.core.exception.SecretManagementException;
 
 import java.net.URL;
@@ -62,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static org.wso2.carbon.event.output.adapter.core.EventAdapterSecretProcessor.decryptCredential;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.ALWAYS_PUBLISH_CONFIG;
+import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.ANALYTICS_ENABLED_FIELD;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
 import static org.wso2.carbon.identity.moesif.publisher.http.MoesifHTTPEventAdapterConstants.ADAPTER_API_KEY_HEADER;
 import static org.wso2.carbon.identity.moesif.publisher.http.MoesifHTTPEventAdapterConstants.ADAPTER_API_KEY_VALUE;
@@ -136,8 +139,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
      * user identifier must be omitted entirely — publishing the placeholder would create phantom users on
      * the Moesif side and break anonymous-to-user linking.
      */
-    private static final Set<String> OPTIONAL_IDENTITY_FIELDS = new HashSet<>(Arrays.asList(
-            "userId", "anonymous_id", "anonymousId"));
+    private static final Set<String> OPTIONAL_IDENTITY_FIELDS = new HashSet<>(Arrays.asList("userId", "anonymous_id", "anonymousId"));
     private static final String EVENT_FIELD = "event";
     private static final String PAYLOAD_DATA_FIELD = "payloadData";
     private static final String REQUEST_FIELD = "request";
@@ -164,8 +166,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
     private int tenantId;
     private volatile HttpClient httpClient = null;
 
-    public MoesifHTTPEventAdapter(OutputEventAdapterConfiguration eventAdapterConfiguration,
-                                  Map<String, String> globalProperties) {
+    public MoesifHTTPEventAdapter(OutputEventAdapterConfiguration eventAdapterConfiguration, Map<String, String> globalProperties) {
 
         this.eventAdapterConfiguration = eventAdapterConfiguration;
         this.globalProperties = globalProperties;
@@ -186,28 +187,15 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
     private synchronized static void initSharedResources(Map<String, String> globals) {
 
         if (executorService == null) {
-            int minThread = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_MIN_THREAD_POOL_SIZE_NAME,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_MIN_THREAD_POOL_SIZE);
-            int maxThread = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_MAX_THREAD_POOL_SIZE_NAME,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_MAX_THREAD_POOL_SIZE);
-            long keepAliveTime = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_KEEP_ALIVE_TIME_NAME,
-                    (int) MoesifHTTPEventAdapterConstants.DEFAULT_KEEP_ALIVE_TIME_IN_MILLIS);
-            int jobQueueSize = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_EXECUTOR_JOB_QUEUE_SIZE_NAME,
-                    MoesifHTTPEventAdapterConstants.ADAPTER_EXECUTOR_JOB_QUEUE_SIZE);
+            int minThread = getIntProperty(globals, MoesifHTTPEventAdapterConstants.ADAPTER_MIN_THREAD_POOL_SIZE_NAME, MoesifHTTPEventAdapterConstants.ADAPTER_MIN_THREAD_POOL_SIZE);
+            int maxThread = getIntProperty(globals, MoesifHTTPEventAdapterConstants.ADAPTER_MAX_THREAD_POOL_SIZE_NAME, MoesifHTTPEventAdapterConstants.ADAPTER_MAX_THREAD_POOL_SIZE);
+            long keepAliveTime = getIntProperty(globals, MoesifHTTPEventAdapterConstants.ADAPTER_KEEP_ALIVE_TIME_NAME, (int) MoesifHTTPEventAdapterConstants.DEFAULT_KEEP_ALIVE_TIME_IN_MILLIS);
+            int jobQueueSize = getIntProperty(globals, MoesifHTTPEventAdapterConstants.ADAPTER_EXECUTOR_JOB_QUEUE_SIZE_NAME, MoesifHTTPEventAdapterConstants.ADAPTER_EXECUTOR_JOB_QUEUE_SIZE);
 
-            executorService = new ThreadPoolExecutor(minThread, maxThread, keepAliveTime, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(jobQueueSize));
+            executorService = new ThreadPoolExecutor(minThread, maxThread, keepAliveTime, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(jobQueueSize));
 
-            int maxConnectionsPerHost = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.DEFAULT_MAX_CONNECTIONS_PER_HOST_NAME,
-                    MoesifHTTPEventAdapterConstants.DEFAULT_MAX_CONNECTIONS_PER_HOST);
-            int maxTotalConnections = getIntProperty(globals,
-                    MoesifHTTPEventAdapterConstants.MAX_TOTAL_CONNECTIONS_NAME,
-                    MoesifHTTPEventAdapterConstants.DEFAULT_MAX_TOTAL_CONNECTIONS);
+            int maxConnectionsPerHost = getIntProperty(globals, MoesifHTTPEventAdapterConstants.DEFAULT_MAX_CONNECTIONS_PER_HOST_NAME, MoesifHTTPEventAdapterConstants.DEFAULT_MAX_CONNECTIONS_PER_HOST);
+            int maxTotalConnections = getIntProperty(globals, MoesifHTTPEventAdapterConstants.MAX_TOTAL_CONNECTIONS_NAME, MoesifHTTPEventAdapterConstants.DEFAULT_MAX_TOTAL_CONNECTIONS);
 
             connectionManager = new MultiThreadedHttpConnectionManager();
             connectionManager.getParams().setDefaultMaxConnectionsPerHost(maxConnectionsPerHost);
@@ -246,6 +234,16 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
         JsonObject event = parseEvent(message);
         JsonObject metaData = getAsJsonObject(event, META_DATA_FIELD);
 
+        /*
+         * When the server-level AlwaysPublish switch is on, the per-org analytics decision carried in
+         * the evet metaData drives whether this event should reach Moesif. A disabled org still publishes
+         * (so the event router can forward it to Azure Event Hub) but we neither surface the indicator on the
+         * wire nor load the Moesif collector key for it. When the switch is off the indicator is irrelevant
+         * (direct-to-Moesif on-prem behaviour) and the key is always attached.
+         */
+        boolean analyticsEnabled = !isAlwaysPublishEnabled() ||
+                getBooleanField(metaData, ANALYTICS_ENABLED_FIELD, true);
+
         String url = resolveUrl(dynamicProperties.get(ADAPTER_MESSAGE_URL), metaData);
         Map<String, String> headers = buildHeaders(metaData, dynamicProperties);
         String payload = buildBody(event);
@@ -254,18 +252,19 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
         String apiKeyValue = null;
         String authType = eventAdapterConfiguration.getStaticProperties().get(ADAPTER_AUTH_TYPE);
         if (AUTH_TYPE_API_KEY.equalsIgnoreCase(authType)) {
-            apiKeyHeader = eventAdapterConfiguration.getStaticProperties().get(ADAPTER_API_KEY_HEADER);
-            apiKeyValue = resolveApiKey();
+            if (analyticsEnabled) {
+                apiKeyHeader = eventAdapterConfiguration.getStaticProperties().get(ADAPTER_API_KEY_HEADER);
+                apiKeyValue = resolveApiKey();
+            }
         } else if (StringUtils.isNotBlank(authType) && !AUTH_TYPE_NONE.equalsIgnoreCase(authType)) {
-            throw new OutputEventAdapterRuntimeException("The adapter " + eventAdapterConfiguration.getName()
-                    + " supports only API key based authentication, but '" + authType + "' was configured.");
+            throw new OutputEventAdapterRuntimeException("The adapter " + eventAdapterConfiguration.getName() +
+                    " supports only API key based authentication, but '" + authType + "' was configured.");
         }
 
         try {
             executorService.submit(new HTTPSender(url, payload, headers, apiKeyHeader, apiKeyValue));
         } catch (RejectedExecutionException e) {
-            EventAdapterUtil.logAndDrop(eventAdapterConfiguration.getName(), message,
-                    "Job queue is full", e, LOG, tenantId);
+            EventAdapterUtil.logAndDrop(eventAdapterConfiguration.getName(), message, "Job queue is full", e, LOG, tenantId);
         }
     }
 
@@ -297,8 +296,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
         } catch (SecretManagementException e) {
             String staticApiKeyValue = eventAdapterConfiguration.getStaticProperties().get(ADAPTER_API_KEY_VALUE);
             if (StringUtils.isBlank(staticApiKeyValue)) {
-                throw new ConnectionUnavailableException("The adapter " + eventAdapterConfiguration.getName()
-                        + " failed to connect to the server due to missing API key value");
+                throw new ConnectionUnavailableException("The adapter " + eventAdapterConfiguration.getName() + " failed to connect to the server due to missing API key value");
             }
             return staticApiKeyValue;
         }
@@ -363,6 +361,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
         JsonObject request = new JsonObject();
         request.addProperty(TIME_FIELD, Instant.now().toString());
 
+        boolean alwaysPublish = isAlwaysPublishEnabled();
         if (event != null) {
             JsonObject metaData = getAsJsonObject(event, META_DATA_FIELD);
             if (metaData != null) {
@@ -371,6 +370,11 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
                     JsonElement value = entry.getValue();
                     if (USER_AGENT_FIELD.equals(key) || URL_SUFFIX_FIELD.equals(key)) {
                         // userAgent goes on the HTTP header only; urlSuffix is routing metadata only.
+                        continue;
+                    }
+                    if (ANALYTICS_ENABLED_FIELD.equals(key) && !alwaysPublish) {
+                        // analyticsEnabled is a routing hint for the downstream event router; drop it from
+                        // the wire when the router integration is off (direct-to-Moesif on-prem behaviour).
                         continue;
                     }
                     if (IP_ADDRESS_FIELD.equals(key)) {
@@ -445,6 +449,45 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
     }
 
     /**
+     * Reads a boolean field from the given JSON object, accepting either a JSON boolean or a string parseable
+     * by {@link Boolean#parseBoolean}. Returns {@code defaultValue} when the field is absent or not coercible.
+     */
+    private static boolean getBooleanField(JsonObject object, String field, boolean defaultValue) {
+
+        if (object == null || !object.has(field)) {
+            return defaultValue;
+        }
+        JsonElement element = object.get(field);
+        if (element.isJsonPrimitive()) {
+            if (element.getAsJsonPrimitive().isBoolean()) {
+                return element.getAsBoolean();
+            }
+            if (element.getAsJsonPrimitive().isString()) {
+                return Boolean.parseBoolean(element.getAsString());
+            }
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Reads the server-level {@code Analytics.Moesif.AlwaysPublish} switch. When on, events are
+     * always published to the configured provider (the event router) and the per-org {@code analyticsEnabled}
+     * decision is surfaced so the router can gate Moesif forwarding; when off the publisher behaves as a
+     * direct-to-Moesif adapter and drops the indicator.
+     */
+    private static boolean isAlwaysPublishEnabled() {
+
+        try {
+            return Boolean.parseBoolean(IdentityUtil.getProperty(ALWAYS_PUBLISH_CONFIG));
+        } catch (RuntimeException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Could not read '" + ALWAYS_PUBLISH_CONFIG + "'; defaulting to false.", e);
+            }
+            return false;
+        }
+    }
+
+    /**
      * Returns {@code true} when the given JSON element carries a non-blank, non-sentinel string value.
      * Used to decide whether to surface optional fields (currently only {@code ipAddress}) into the
      * output payload — we'd rather omit the field than ship a {@code "NOT_AVAILABLE"} placeholder that
@@ -491,8 +534,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
         private final String apiKeyHeader;
         private final String apiKeyValue;
 
-        HTTPSender(String url, String payload, Map<String, String> headers,
-                   String apiKeyHeader, String apiKeyValue) {
+        HTTPSender(String url, String payload, Map<String, String> headers, String apiKeyHeader, String apiKeyValue) {
 
             this.url = url;
             this.payload = payload;
@@ -525,8 +567,7 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
                 }
 
                 if (method instanceof EntityEnclosingMethod) {
-                    ((EntityEnclosingMethod) method)
-                            .setRequestEntity(new StringRequestEntity(payload, CONTENT_TYPE_JSON, "UTF-8"));
+                    ((EntityEnclosingMethod) method).setRequestEntity(new StringRequestEntity(payload, CONTENT_TYPE_JSON, "UTF-8"));
                 }
 
                 if (headers != null) {
@@ -541,17 +582,13 @@ public class MoesifHTTPEventAdapter implements OutputEventAdapter {
                 int responseCode = httpClient.executeMethod(hostConfiguration, method);
                 if (responseCode / 100 == 2) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("[Id: " + uuid + "] Successfully published to the endpoint: " + url
-                                + ". Received HTTP response code: " + responseCode);
+                        LOG.debug("[Id: " + uuid + "] Successfully published to the endpoint: " + url + ". Received HTTP response code: " + responseCode);
                     }
                 } else {
-                    LOG.error("[Id: " + uuid + "] Error while publishing to the endpoint: " + url
-                            + ". Received HTTP response code: " + responseCode
-                            + ". Response body: " + method.getResponseBodyAsString());
+                    LOG.error("[Id: " + uuid + "] Error while publishing to the endpoint: " + url + ". Received HTTP response code: " + responseCode + ". Response body: " + method.getResponseBodyAsString());
                 }
             } catch (UnknownHostException e) {
-                EventAdapterUtil.logAndDrop(eventAdapterConfiguration.getName(), payload,
-                        "Cannot connect to " + url, e, LOG, tenantId);
+                EventAdapterUtil.logAndDrop(eventAdapterConfiguration.getName(), payload, "Cannot connect to " + url, e, LOG, tenantId);
             } catch (Throwable e) {
                 EventAdapterUtil.logAndDrop(eventAdapterConfiguration.getName(), payload, null, e, LOG, tenantId);
             } finally {

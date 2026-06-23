@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eventPublisher
+        name="IsAnalytics-Publisher-moesif-MoesifUserLinkData"
+        statistics="disable" trace="disable" xmlns="http://wso2.org/carbon/eventpublisher">
+    <from streamName="org.wso2.is.analytics.stream.MoesifUserLinkData" version="1.0.0"/>
+    <mapping customMapping="disable" type="json" />
+    <to eventAdapterType="moesif-http">
+        <property name="http.client.method">{{analytics.moesif.client_method}}</property>
+        <property name="http.url">{{analytics.moesif.provider_url}}</property>
+        <property name="http.authType">{{analytics.moesif.auth_type}}</property>
+        <property name="http.apiKeyHeader">{{analytics.moesif.api_key_header}}</property>
+        <property name="http.secret.provider">{{analytics.moesif.secret_provider}}</property>
+    </to>
+</eventPublisher>

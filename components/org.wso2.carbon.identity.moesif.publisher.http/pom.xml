@@ -52,6 +52,10 @@
             <artifactId>org.wso2.carbon.identity.secret.mgt.core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-httpclient.wso2</groupId>
             <artifactId>commons-httpclient</artifactId>
         </dependency>
@@ -100,6 +104,7 @@
                             org.wso2.carbon.event.output.adapter.core; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.event.output.adapter.core.exception; version="${carbon.analytics-common.imp.pkg.version.range}",
                             org.wso2.carbon.identity.secret.mgt.core.exception; version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.core.util; version="${carbon.identity.framework.imp.pkg.version.range}",
                             com.google.gson; version="${com.google.code.gson.osgi.version.range}",
                         </Import-Package>
                         <Export-Package>

@@ -18,11 +18,9 @@
 
 package org.wso2.carbon.identity.moesif.configuration.internal;
 
-import org.wso2.carbon.identity.configuration.mgt.core.ConfigurationManager;
 import org.wso2.carbon.identity.governance.IdentityGovernanceService;
 import org.wso2.carbon.identity.secret.mgt.core.SecretManager;
 import org.wso2.carbon.identity.secret.mgt.core.SecretResolveManager;
-import org.wso2.carbon.identity.tenant.resource.manager.core.ResourceManager;
 
 /**
  * Data holder for the Moesif configuration management service component.
@@ -31,8 +29,6 @@ public class MoesifConfigurationDataHolder {
 
     private static final MoesifConfigurationDataHolder instance = new MoesifConfigurationDataHolder();
 
-    private ConfigurationManager configurationManager;
-    private ResourceManager resourceManager;
     private SecretManager secretManager;
     private SecretResolveManager secretResolveManager;
     private IdentityGovernanceService identityGovernanceService;
@@ -44,26 +40,6 @@ public class MoesifConfigurationDataHolder {
     public static MoesifConfigurationDataHolder getInstance() {
 
         return instance;
-    }
-
-    public ConfigurationManager getConfigurationManager() {
-
-        return configurationManager;
-    }
-
-    public void setConfigurationManager(ConfigurationManager configurationManager) {
-
-        this.configurationManager = configurationManager;
-    }
-
-    public ResourceManager getResourceManager() {
-
-        return resourceManager;
-    }
-
-    public void setResourceManager(ResourceManager resourceManager) {
-
-        this.resourceManager = resourceManager;
     }
 
     public SecretManager getSecretManager() {

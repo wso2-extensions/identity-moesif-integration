@@ -7,5 +7,8 @@
     <to eventAdapterType="moesif-http">
         <property name="http.client.method">httpPost</property>
         <property name="http.url"></property>
+        <property name="http.authType">API_KEY</property>
+        <property name="http.apiKeyHeader">X-Moesif-Application-Id</property>
+        <property name="http.secret.provider">MOESIF_SECRET_PROVIDER</property>
     </to>
 </eventPublisher>

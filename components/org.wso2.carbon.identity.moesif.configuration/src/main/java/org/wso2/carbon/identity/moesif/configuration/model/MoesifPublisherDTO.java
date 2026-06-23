@@ -36,6 +36,8 @@ public class MoesifPublisherDTO {
 
     private Map<String, Boolean> publisherTypes = new HashMap<>();
 
+    private boolean enableAllPublishers;
+
     private Map<String, String> properties = new HashMap<>();
 
     public String getName() {
@@ -126,5 +128,15 @@ public class MoesifPublisherDTO {
     public void setPublisherTypes(Map<String, Boolean> publisherTypes) {
 
         this.publisherTypes = publisherTypes;
+    }
+
+    public boolean isEnableAllPublishers() {
+
+        return enableAllPublishers;
+    }
+
+    public void setEnableAllPublishers(boolean enableAllPublishers) {
+
+        this.enableAllPublishers = enableAllPublishers;
     }
 }

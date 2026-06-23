@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
+import java.util.Arrays;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
@@ -68,7 +69,8 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
     @Override
     public void handleEvent(Event event) {
 
-        if (!isEnabled()) {
+        MoesifHandlerUtils.PublishDecision decision = resolvePublishDecision();
+        if (!decision.shouldPublish()) {
             return;
         }
 
@@ -89,12 +91,16 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         AuthenticationContext authenticationContext = (AuthenticationContext) event.getEventProperties().get("context");
         SessionDataPublisherUtil.updateTimeStamps(sessionData, actionId);
 
-        // Build the same payload as the analytics session publisher.
-        Object[] payloadData = SessionDataPublisherUtil.isPublishingSessionCountEnabled()
-                ? SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true)
-                : SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
+        Object[] payloadData;
+        if (SessionDataPublisherUtil.isPublishingSessionCountEnabled()) {
+            payloadData = SessionDataPublisherUtil.buildSessionPayloadWithSessionCount(sessionData, actionId, true);
+        } else {
+            Object[] basePayload = SessionDataPublisherUtil.buildSessionPayload(sessionData, actionId, true);
+            payloadData = Arrays.copyOf(basePayload, basePayload.length + 1);
+            payloadData[basePayload.length] = NOT_AVAILABLE;
+        }
 
-        publishToMoesif(event, sessionData, authenticationContext, payloadData);
+        publishToMoesif(event, sessionData, authenticationContext, payloadData, decision.isAnalyticsEnabled());
     }
 
     /**
@@ -103,7 +109,8 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
      * analytics publisher which starts from the super-tenant.
      */
     private void publishToMoesif(Event event, SessionData sessionData,
-                                 AuthenticationContext authenticationContext, Object[] payloadData) {
+                                 AuthenticationContext authenticationContext, Object[] payloadData,
+                                 boolean analyticsEnabled) {
 
         String tenantDomain = sessionData.getTenantDomain();
         if (StringUtils.isBlank(tenantDomain)) {
@@ -160,7 +167,7 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         String ipAddress = sessionData.getRemoteIP() != null ? sessionData.getRemoteIP() : NOT_AVAILABLE;
 
         Object[] metaData = MoesifHandlerUtils.getMetaDataArray(orgUuid, ACTION_NAME_USER_SESSION, userId, userAgent,
-                ipAddress);
+                ipAddress, analyticsEnabled);
 
         org.wso2.carbon.databridge.commons.Event databridgeEvent =
                 new org.wso2.carbon.databridge.commons.Event(
@@ -178,17 +185,14 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
         }
     }
 
-    private boolean isEnabled() {
+    private MoesifHandlerUtils.PublishDecision resolvePublishDecision() {
 
-        if (this.configs.getModuleProperties() != null) {
-            String handlerEnabled = this.configs.getModuleProperties()
-                    .getProperty(USER_SESSION_PUBLISHER_ENABLE);
-            if (Boolean.parseBoolean(handlerEnabled)) {
-                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MoesifCommonConstants.MOESIF_SESSION_PUBLISHER_ENABLED_PROPERTY);
-            }
+        if (this.configs.getModuleProperties() == null
+                || !Boolean.parseBoolean(this.configs.getModuleProperties().getProperty(USER_SESSION_PUBLISHER_ENABLE))) {
+            return MoesifHandlerUtils.doNotPublish();
         }
-        return false;
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        return MoesifHandlerUtils.resolvePublishDecision(tenantDomain,
+                MoesifCommonConstants.MOESIF_SESSION_PUBLISHER_ENABLED_PROPERTY);
     }
 }

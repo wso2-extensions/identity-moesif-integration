@@ -104,6 +104,29 @@ public class MoesifSecretProcessor {
         return resolvedSecret.getResolvedSecretValue();
     }
 
+    /**
+     * Returns {@code true} when a secret for the given publisher namespace / auth type / property is
+     * already stored. Used to detect whether Moesif is configured for the current tenant without
+     * resolving (decrypting) the value. Any lookup failure is treated as "not configured".
+     *
+     * @param publisherName Name of the Moesif publisher (secret namespace).
+     * @param authType      Authentication type (e.g., API_KEY).
+     * @param property      The property key (e.g., apiKeyValue).
+     * @return {@code true} only when the secret exists.
+     */
+    public static boolean isSecretConfigured(String publisherName, String authType, String property) {
+
+        try {
+            String secretType = publisherName + SECRET_PROPERTIES_SUFFIX;
+            if (!isSecretTypeExist(secretType)) {
+                return false;
+            }
+            return isSecretExist(secretType, buildSecretName(publisherName, authType, property));
+        } catch (SecretManagementException e) {
+            return false;
+        }
+    }
+
     private static boolean isSecretTypeExist(String secretType) {
 
         try {

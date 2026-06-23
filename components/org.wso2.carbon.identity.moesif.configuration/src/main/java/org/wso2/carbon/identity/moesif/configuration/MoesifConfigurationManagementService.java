@@ -39,10 +39,14 @@ public interface MoesifConfigurationManagementService {
      *
      * @param apiKeyValue    Plain-text Moesif collector API key (app_token).
      * @param eventPublisherEnablement Publisher type keys (e.g. "login", "registration", "flow") to enabled flag.
+     * @param enableAllPublishers When {@code true}, all supported publishers are enabled for the org
+     *                            regardless of {@code eventPublisherEnablement}, and the per-publisher
+     *                            governance toggles are not consulted on read.
      * @return Created Moesif publisher DTO (contains only the name; secrets are not returned).
      * @throws MoesifConfigurationManagementException If an error occurs while creating the publisher.
      */
-    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
+    MoesifPublisherDTO addMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement,
+                                          boolean enableAllPublishers)
             throws MoesifConfigurationManagementException;
 
     /**
@@ -71,10 +75,13 @@ public interface MoesifConfigurationManagementService {
      *
      * @param apiKeyValue    New plain-text Moesif API key value, or {@code null}/blank to retain the existing key.
      * @param eventPublisherEnablement Map of publisher type key (e.g. "moesif-authentication-publisher") to enabled flag.
+     * @param enableAllPublishers When {@code true}, all supported publishers are enabled for the org
+     *                            regardless of {@code eventPublisherEnablement}.
      * @return Updated Moesif publisher DTO.
      * @throws MoesifConfigurationManagementException If an error occurs while updating the publisher.
      */
-    MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement)
+    MoesifPublisherDTO updateMoesifPublisher(String apiKeyValue, Map<String, Boolean> eventPublisherEnablement,
+                                             boolean enableAllPublishers)
             throws MoesifConfigurationManagementException;
 
     /**

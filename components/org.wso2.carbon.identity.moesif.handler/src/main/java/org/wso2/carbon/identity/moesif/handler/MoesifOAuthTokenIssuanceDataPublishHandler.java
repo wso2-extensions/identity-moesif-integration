@@ -72,7 +72,8 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
     @Override
     public void handleEvent(Event event) throws IdentityEventException {
 
-        if (!isEnabled()) {
+        MoesifHandlerUtils.PublishDecision decision = resolvePublishDecision();
+        if (!decision.shouldPublish()) {
             return;
         }
 
@@ -136,7 +137,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
                 asString(properties.get(EVENT_PROP_REMOTE_IP)), NOT_AVAILABLE);
 
         Object[] metaData = MoesifHandlerUtils.getMetaDataArray(
-                companyId, ACTION_NAME_TOKEN_ISSUANCE, userId, NOT_AVAILABLE, ipAddress);
+                companyId, ACTION_NAME_TOKEN_ISSUANCE, userId, NOT_AVAILABLE, ipAddress, decision.isAnalyticsEnabled());
 
         boolean existingTokenUsed = asBoolean(properties.get(IdentityEventConstants.EventProperty.EXISTING_TOKEN_USED));
         boolean subOrgRequest = !StringUtils.equals(rootTenantDomain, tenantDomain);
@@ -286,17 +287,14 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         return value == null ? null : value.toString();
     }
 
-    private boolean isEnabled() {
+    private MoesifHandlerUtils.PublishDecision resolvePublishDecision() {
 
-        if (this.configs.getModuleProperties() != null) {
-            String handlerEnabled = this.configs.getModuleProperties()
-                    .getProperty(TOKEN_ISSUANCE_PUBLISHER_ENABLED);
-            if (Boolean.parseBoolean(handlerEnabled)) {
-                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                return MoesifHandlerUtils.isHandlerEnabledForPrimaryTenant(tenantDomain,
-                        MoesifCommonConstants.MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY);
-            }
+        if (this.configs.getModuleProperties() == null
+                || !Boolean.parseBoolean(this.configs.getModuleProperties().getProperty(TOKEN_ISSUANCE_PUBLISHER_ENABLED))) {
+            return MoesifHandlerUtils.doNotPublish();
         }
-        return false;
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        return MoesifHandlerUtils.resolvePublishDecision(tenantDomain,
+                MoesifCommonConstants.MOESIF_TOKEN_ISSUANCE_PUBLISHER_ENABLED_PROPERTY);
     }
 }
