@@ -150,9 +150,17 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
 
         String userId;
         try {
-            AuthenticatedUser user = authenticationContext.getSubject();
-            if (user == null) {
-                user = authenticationContext.getLastAuthenticatedUser();
+            AuthenticatedUser user = null;
+            if (authenticationContext != null) {
+                user = authenticationContext.getSubject();
+                if (user == null) {
+                    user = authenticationContext.getLastAuthenticatedUser();
+                }
+            } else if (StringUtils.isNotBlank(sessionData.getUser())) {
+                user = new AuthenticatedUser();
+                user.setUserName(sessionData.getUser());
+                user.setUserStoreDomain(sessionData.getUserStoreDomain());
+                user.setTenantDomain(sessionData.getTenantDomain());
             }
             if (user != null) {
                 userId = StringUtils.defaultIfBlank(user.getUserId(), MoesifCommonConstants.NOT_AVAILABLE);
