@@ -36,6 +36,7 @@ import org.wso2.carbon.identity.organization.management.service.exception.Organi
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
@@ -107,8 +108,8 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
             LOG.warn("Tenant domain is blank; skipping Moesif flow step event.");
             return;
         }
-        String actionName = resolveActionName(flowType);
-        if (actionName == null) {
+        Optional<String> actionName = resolveActionName(flowType);
+        if (actionName.isEmpty()) {
             return;
         }
         try {
@@ -134,7 +135,7 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
 
             try {
                 FrameworkUtils.startTenantFlow(rootTenantDomain);
-                publishFlowStepToMoesif(payload, parentOrgId, actionName, anonymousId, analyticsEnabled);
+                publishFlowStepToMoesif(payload, parentOrgId, actionName.get(), anonymousId, analyticsEnabled);
                 if (isFlowComplete(properties) && StringUtils.isNotBlank(userId)) {
                     publishUserLinkToMoesif(userId, anonymousId, parentOrgId, analyticsEnabled);
                 }
@@ -147,34 +148,34 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
     }
 
     /**
-     * Resolve the Moesif action name for the given flow type. Returns {@code null} when the flow
-     * type is missing, unknown, or not one of the flow types published to Moesif, so the caller
-     * can skip the event.
+     * Resolve the Moesif action name for the given flow type. Returns an empty {@link Optional}
+     * when the flow type is missing, unknown, or not one of the flow types published to Moesif,
+     * so the caller can skip the event.
      */
-    private String resolveActionName(String flowType) {
+    private Optional<String> resolveActionName(String flowType) {
 
         if (StringUtils.isBlank(flowType)) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Flow type is blank; skipping Moesif flow step event.");
             }
-            return null;
+            return Optional.empty();
         }
         try {
             switch (Constants.FlowTypes.valueOf(flowType)) {
                 case Constants.FlowTypes.REGISTRATION:
-                    return ACTION_NAME_USER_REGISTRATION_FLOW;
+                    return Optional.of(ACTION_NAME_USER_REGISTRATION_FLOW);
                 case Constants.FlowTypes.INVITED_USER_REGISTRATION:
-                    return ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
+                    return Optional.of(ACTION_NAME_INVITED_USER_REGISTRATION_FLOW);
                 case Constants.FlowTypes.PASSWORD_RECOVERY:
-                    return ACTION_NAME_PASSWORD_RECOVERY_FLOW;
+                    return Optional.of(ACTION_NAME_PASSWORD_RECOVERY_FLOW);
                 default:
-                    return null;
+                    return Optional.empty();
             }
         } catch (IllegalArgumentException e) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Unknown flow type '" + flowType + "'; skipping Moesif flow step event.");
             }
-            return null;
+            return Optional.empty();
         }
     }
 
