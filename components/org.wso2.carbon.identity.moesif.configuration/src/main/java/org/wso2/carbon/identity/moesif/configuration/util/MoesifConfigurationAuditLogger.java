@@ -19,8 +19,6 @@
 package org.wso2.carbon.identity.moesif.configuration.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
@@ -41,7 +39,6 @@ import static org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils.trigger
  */
 public class MoesifConfigurationAuditLogger {
 
-    private static final Log LOG = LogFactory.getLog(MoesifConfigurationAuditLogger.class);
     private static final String TARGET_MOESIF_PUBLISHER = "MoesifPublisherConfiguration";
 
     private MoesifConfigurationAuditLogger() {
@@ -86,20 +83,14 @@ public class MoesifConfigurationAuditLogger {
 
     private static void buildAuditLog(Operation operation, Map<String, Object> data) {
 
-        // Auditing is best-effort: a failure to publish the audit log must never fail the
-        // configuration operation itself.
-        try {
-            String initiatorId = getInitiatorId();
-            AuditLog.AuditLogBuilder auditLogBuilder = new AuditLog.AuditLogBuilder(initiatorId,
-                    LoggerUtils.getInitiatorType(initiatorId),
-                    PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(),
-                    TARGET_MOESIF_PUBLISHER,
-                    operation.getLogAction())
-                    .data(data);
-            triggerAuditLogEvent(auditLogBuilder);
-        } catch (RuntimeException e) {
-            LOG.warn(String.format("Failed to publish audit log for %s.", operation.getLogAction()), e);
-        }
+        String initiatorId = getInitiatorId();
+        AuditLog.AuditLogBuilder auditLogBuilder = new AuditLog.AuditLogBuilder(initiatorId,
+                LoggerUtils.getInitiatorType(initiatorId),
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(),
+                TARGET_MOESIF_PUBLISHER,
+                operation.getLogAction())
+                .data(data);
+        triggerAuditLogEvent(auditLogBuilder);
     }
 
     /**
