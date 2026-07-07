@@ -93,14 +93,27 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      */
     private void publishFlowEventForNode(Map<String, Object> properties, boolean analyticsEnabled) {
 
+        if (properties == null || properties.isEmpty()) {
+            LOG.warn("Event properties are null or empty; skipping Moesif flow step event.");
+            return;
+        }
+
         String anonymousId = buildAnonymousId(
                 (String) properties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
         String userId = (String) properties.get(IdentityEventConstants.EventProperty.USER_ID);
         String flowType = (String) properties.get(IdentityEventConstants.EventProperty.FLOW_TYPE);
         String tenantDomain = (String) properties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN);
+        if (StringUtils.isBlank(tenantDomain)) {
+            LOG.warn("Tenant domain is blank; skipping Moesif flow step event.");
+            return;
+        }
+        String actionName = resolveActionName(flowType);
+        if (actionName == null) {
+            return;
+        }
         try {
             String orgId = MoesifHandlerDataHolder.getInstance().getOrganizationManager()
-                    .resolveOrganizationId(properties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN).toString());
+                    .resolveOrganizationId(tenantDomain);
             String rootTenantDomain = tenantDomain;
             String parentOrgId = OrganizationManagementConstants.SUPER_ORG_ID;
             try {
@@ -116,20 +129,6 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
                     LOG.debug("Could not resolve organization ID for tenant '" + tenantDomain
                             + "'; using NOT_AVAILABLE as company ID.", e);
                 }
-            }
-            String actionName;
-            switch (Constants.FlowTypes.valueOf(flowType)) {
-                case Constants.FlowTypes.REGISTRATION:
-                    actionName = ACTION_NAME_USER_REGISTRATION_FLOW;
-                    break;
-                case Constants.FlowTypes.INVITED_USER_REGISTRATION:
-                    actionName = ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
-                    break;
-                case Constants.FlowTypes.PASSWORD_RECOVERY:
-                    actionName = ACTION_NAME_PASSWORD_RECOVERY_FLOW;
-                    break;
-                default:
-                    return;
             }
             Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(properties, orgId, parentOrgId);
 
@@ -148,11 +147,43 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
     }
 
     /**
+     * Resolve the Moesif action name for the given flow type. Returns {@code null} when the flow
+     * type is missing, unknown, or not one of the flow types published to Moesif, so the caller
+     * can skip the event.
+     */
+    private String resolveActionName(String flowType) {
+
+        if (StringUtils.isBlank(flowType)) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Flow type is blank; skipping Moesif flow step event.");
+            }
+            return null;
+        }
+        try {
+            switch (Constants.FlowTypes.valueOf(flowType)) {
+                case Constants.FlowTypes.REGISTRATION:
+                    return ACTION_NAME_USER_REGISTRATION_FLOW;
+                case Constants.FlowTypes.INVITED_USER_REGISTRATION:
+                    return ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
+                case Constants.FlowTypes.PASSWORD_RECOVERY:
+                    return ACTION_NAME_PASSWORD_RECOVERY_FLOW;
+                default:
+                    return null;
+            }
+        } catch (IllegalArgumentException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Unknown flow type '" + flowType + "'; skipping Moesif flow step event.");
+            }
+            return null;
+        }
+    }
+
+    /**
      * Build the anonymous Moesif identifier from the flow context identifier.
      */
     private String buildAnonymousId(String contextId) {
 
-        return CTX + contextId;
+        return StringUtils.isBlank(contextId) ? NOT_AVAILABLE : CTX + contextId;
     }
 
     /**
