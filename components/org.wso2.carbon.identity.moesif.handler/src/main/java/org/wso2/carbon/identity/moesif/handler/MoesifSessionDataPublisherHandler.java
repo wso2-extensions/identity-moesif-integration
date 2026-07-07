@@ -150,9 +150,20 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
 
         String userId;
         try {
-            AuthenticatedUser user = authenticationContext.getSubject();
-            if (user == null) {
-                user = authenticationContext.getLastAuthenticatedUser();
+            AuthenticatedUser user = null;
+            if (authenticationContext != null) {
+                user = authenticationContext.getSubject();
+                if (user == null) {
+                    user = authenticationContext.getLastAuthenticatedUser();
+                }
+            } else if (sessionData != null && StringUtils.isNotBlank(sessionData.getUser())) {
+                // Session events triggered outside an authentication flow (e.g. session termination
+                // via the session management API) do not carry an authentication context. Fall back
+                // to the user details available in the session data to resolve the user ID.
+                user = new AuthenticatedUser();
+                user.setUserName(sessionData.getUser());
+                user.setUserStoreDomain(sessionData.getUserStoreDomain());
+                user.setTenantDomain(sessionData.getTenantDomain());
             }
             if (user != null) {
                 userId = StringUtils.defaultIfBlank(user.getUserId(), MoesifCommonConstants.NOT_AVAILABLE);
