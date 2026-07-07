@@ -33,6 +33,8 @@ import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurati
 import org.wso2.carbon.identity.moesif.configuration.exception.MoesifConfigurationManagementServerException;
 import org.wso2.carbon.identity.moesif.configuration.internal.MoesifConfigurationDataHolder;
 import org.wso2.carbon.identity.moesif.configuration.model.MoesifPublisherDTO;
+import org.wso2.carbon.identity.moesif.configuration.util.MoesifConfigurationAuditLogger;
+import org.wso2.carbon.identity.moesif.configuration.util.MoesifConfigurationAuditLogger.Operation;
 import org.wso2.carbon.identity.moesif.configuration.util.MoesifSecretProcessor;
 import org.wso2.carbon.identity.secret.mgt.core.exception.SecretManagementException;
 
@@ -117,6 +119,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         storeApiKey(apiKeyValue);
         updateAllGovernanceConfigs(resolved, enableAllPublishers);
 
+        MoesifConfigurationAuditLogger.printAuditLog(Operation.ADD, MOESIF_PUBLISHER_CANONICAL_NAME,
+                resolved, enableAllPublishers, true);
+
         return buildResultDTO(eventPublisherEnablement, enableAllPublishers);
     }
 
@@ -168,6 +173,9 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
         updateAllGovernanceConfigs(resolved, enableAllPublishers);
 
+        MoesifConfigurationAuditLogger.printAuditLog(Operation.UPDATE, MOESIF_PUBLISHER_CANONICAL_NAME,
+                resolved, enableAllPublishers, StringUtils.isNotBlank(apiKeyValue));
+
         return buildResultDTO(eventPublisherEnablement, enableAllPublishers);
     }
 
@@ -185,6 +193,8 @@ public class MoesifConfigurationManagementServiceImpl implements MoesifConfigura
         }
 
         updateAllGovernanceConfigs(Collections.emptyMap(), false);
+
+        MoesifConfigurationAuditLogger.printAuditLog(Operation.DELETE, MOESIF_PUBLISHER_CANONICAL_NAME);
     }
 
     /**
