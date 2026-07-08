@@ -110,8 +110,11 @@ public class MoesifHandlerUtils {
         }
 
         String userCreatedTime = getCreatedTimestamp(claims.get(USER_CREATED_TIME_URI));
-        String userStoreDomainName = userStoreManager.getRealmConfiguration().getUserStoreProperty
-                (UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+        String userStoreDomainName = NOT_AVAILABLE;
+        if (userStoreManager != null && userStoreManager.getRealmConfiguration() != null) {
+            userStoreDomainName = userStoreManager.getRealmConfiguration()
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+        }
         String userOnboardedMethod =
                 getUserOnboardedMethod((String[]) eventProperties.get(IdentityEventConstants.EventProperty.ROLE_LIST));
 

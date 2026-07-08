@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.moesif.handler;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
@@ -73,7 +74,15 @@ public class MoesifRegistrationDataPublishHandler extends AbstractEventHandler {
         }
 
         Map<String, Object> eventProperties = event.getEventProperties();
+        if (MapUtils.isEmpty(eventProperties)) {
+            LOG.warn("Event properties are null or empty; skipping Moesif registration event.");
+            return;
+        }
         String tenantDomain = (String) eventProperties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN);
+        if (StringUtils.isBlank(tenantDomain)) {
+            LOG.warn("Tenant domain is blank; skipping Moesif registration event.");
+            return;
+        }
 
         @SuppressWarnings("unchecked")
         Map<String, String> claims =

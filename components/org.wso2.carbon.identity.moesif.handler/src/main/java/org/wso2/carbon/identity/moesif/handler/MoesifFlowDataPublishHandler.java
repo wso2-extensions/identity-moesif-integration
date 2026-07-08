@@ -36,6 +36,7 @@ import org.wso2.carbon.identity.organization.management.service.exception.Organi
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.MOESIF_FLOW_PUBLISHER_ENABLED_PROPERTY;
 import static org.wso2.carbon.identity.moesif.common.constant.MoesifCommonConstants.NOT_AVAILABLE;
@@ -93,14 +94,27 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
      */
     private void publishFlowEventForNode(Map<String, Object> properties, boolean analyticsEnabled) {
 
+        if (properties == null || properties.isEmpty()) {
+            LOG.warn("Event properties are null or empty; skipping Moesif flow step event.");
+            return;
+        }
+
         String anonymousId = buildAnonymousId(
                 (String) properties.get(IdentityEventConstants.EventProperty.CONTEXT_ID));
         String userId = (String) properties.get(IdentityEventConstants.EventProperty.USER_ID);
         String flowType = (String) properties.get(IdentityEventConstants.EventProperty.FLOW_TYPE);
         String tenantDomain = (String) properties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN);
+        if (StringUtils.isBlank(tenantDomain)) {
+            LOG.warn("Tenant domain is blank; skipping Moesif flow step event.");
+            return;
+        }
+        Optional<String> actionName = resolveActionName(flowType);
+        if (actionName.isEmpty()) {
+            return;
+        }
         try {
             String orgId = MoesifHandlerDataHolder.getInstance().getOrganizationManager()
-                    .resolveOrganizationId(properties.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN).toString());
+                    .resolveOrganizationId(tenantDomain);
             String rootTenantDomain = tenantDomain;
             String parentOrgId = OrganizationManagementConstants.SUPER_ORG_ID;
             try {
@@ -117,25 +131,11 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
                             + "'; using NOT_AVAILABLE as company ID.", e);
                 }
             }
-            String actionName;
-            switch (Constants.FlowTypes.valueOf(flowType)) {
-                case Constants.FlowTypes.REGISTRATION:
-                    actionName = ACTION_NAME_USER_REGISTRATION_FLOW;
-                    break;
-                case Constants.FlowTypes.INVITED_USER_REGISTRATION:
-                    actionName = ACTION_NAME_INVITED_USER_REGISTRATION_FLOW;
-                    break;
-                case Constants.FlowTypes.PASSWORD_RECOVERY:
-                    actionName = ACTION_NAME_PASSWORD_RECOVERY_FLOW;
-                    break;
-                default:
-                    return;
-            }
             Object[] payload = MoesifHandlerUtils.buildMoesifFlowStepPayload(properties, orgId, parentOrgId);
 
             try {
                 FrameworkUtils.startTenantFlow(rootTenantDomain);
-                publishFlowStepToMoesif(payload, parentOrgId, actionName, anonymousId, analyticsEnabled);
+                publishFlowStepToMoesif(payload, parentOrgId, actionName.get(), anonymousId, analyticsEnabled);
                 if (isFlowComplete(properties) && StringUtils.isNotBlank(userId)) {
                     publishUserLinkToMoesif(userId, anonymousId, parentOrgId, analyticsEnabled);
                 }
@@ -148,11 +148,43 @@ public class MoesifFlowDataPublishHandler extends AbstractEventHandler {
     }
 
     /**
+     * Resolve the Moesif action name for the given flow type. Returns an empty {@link Optional}
+     * when the flow type is missing, unknown, or not one of the flow types published to Moesif,
+     * so the caller can skip the event.
+     */
+    private Optional<String> resolveActionName(String flowType) {
+
+        if (StringUtils.isBlank(flowType)) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Flow type is blank; skipping Moesif flow step event.");
+            }
+            return Optional.empty();
+        }
+        try {
+            switch (Constants.FlowTypes.valueOf(flowType)) {
+                case Constants.FlowTypes.REGISTRATION:
+                    return Optional.of(ACTION_NAME_USER_REGISTRATION_FLOW);
+                case Constants.FlowTypes.INVITED_USER_REGISTRATION:
+                    return Optional.of(ACTION_NAME_INVITED_USER_REGISTRATION_FLOW);
+                case Constants.FlowTypes.PASSWORD_RECOVERY:
+                    return Optional.of(ACTION_NAME_PASSWORD_RECOVERY_FLOW);
+                default:
+                    return Optional.empty();
+            }
+        } catch (IllegalArgumentException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Unknown flow type '" + flowType + "'; skipping Moesif flow step event.");
+            }
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Build the anonymous Moesif identifier from the flow context identifier.
      */
     private String buildAnonymousId(String contextId) {
 
-        return CTX + contextId;
+        return StringUtils.isBlank(contextId) ? NOT_AVAILABLE : CTX + contextId;
     }
 
     /**

@@ -82,6 +82,10 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
         }
 
         Map<String, Object> eventProperties = event.getEventProperties();
+        if (eventProperties == null) {
+            LOG.warn("Event properties are null; skipping Moesif org-switch event.");
+            return;
+        }
 
         AuthenticatedUser authenticatedUser = (AuthenticatedUser) eventProperties.get(EVENT_PROP_AUTHENTICATED_USER);
         String applicationName = (String) eventProperties.get(EVENT_PROP_APPLICATION_NAME);
@@ -91,6 +95,11 @@ public class MoesifOrgSwitchDataPublishHandler extends AbstractEventHandler {
 
         if (authenticatedUser == null) {
             LOG.warn("AuthenticatedUser is null in OAuthTokenReqMessageContext; skipping org-switch event.");
+            return;
+        }
+
+        if (StringUtils.isBlank(tenantDomain)) {
+            LOG.warn("Tenant domain is blank; skipping Moesif org-switch event.");
             return;
         }
 

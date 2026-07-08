@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import java.util.Arrays;
+import java.util.Map;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
@@ -87,8 +88,14 @@ public class MoesifSessionDataPublisherHandler extends AnalyticsSessionDataPubli
             return;
         }
 
+        Map<String, Object> eventProperties = event.getEventProperties();
+        if (eventProperties == null) {
+            LOG.warn("Event properties are null; skipping Moesif session event.");
+            return;
+        }
+
         SessionData sessionData = SessionDataPublisherUtil.buildSessionData(event);
-        AuthenticationContext authenticationContext = (AuthenticationContext) event.getEventProperties().get("context");
+        AuthenticationContext authenticationContext = (AuthenticationContext) eventProperties.get("context");
         SessionDataPublisherUtil.updateTimeStamps(sessionData, actionId);
 
         Object[] payloadData;
