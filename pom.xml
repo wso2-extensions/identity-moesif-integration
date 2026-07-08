@@ -27,7 +27,7 @@
 
     <groupId>org.wso2.carbon.identity.moesif</groupId>
     <artifactId>identity-moesif-integration</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.10-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <name>WSO2 Identity Moesif Integration</name>
@@ -39,7 +39,7 @@
         <url>https://github.com/wso2-extensions/identity-moesif-integration.git</url>
         <developerConnection>scm:git:https://github.com/wso2-extensions/identity-moesif-integration.git</developerConnection>
         <connection>scm:git:https://github.com/wso2-extensions/identity-moesif-integration.git</connection>
-        <tag>v1.0.9</tag>
+        <tag>HEAD</tag>
     </scm>
     <modules>
         <module>components/org.wso2.carbon.identity.moesif.common</module>
