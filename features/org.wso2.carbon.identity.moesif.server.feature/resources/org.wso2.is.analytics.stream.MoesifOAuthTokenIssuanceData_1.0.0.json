@@ -129,6 +129,10 @@
     {
       "name": "publishingTime",
       "type": "STRING"
+    },
+    {
+      "name": "actor",
+      "type": "STRING"
     }
   ]
 }
