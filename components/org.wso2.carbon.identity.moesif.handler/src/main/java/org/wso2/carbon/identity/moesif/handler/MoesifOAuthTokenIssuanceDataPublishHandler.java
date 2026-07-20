@@ -62,6 +62,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
     private static final String EVENT_PROP_ACCESS_TOKEN_VALIDITY_MILLIS = "ACCESS_TOKEN_VALIDITY_MILLIS";
     private static final String EVENT_PROP_REFRESH_TOKEN_VALIDITY_MILLIS = "REFRESH_TOKEN_VALIDITY_MILLIS";
     private static final String EVENT_PROP_REMOTE_IP = "REMOTE_IP";
+    private static final String EVENT_PROP_ACTOR = "ACTOR";
 
     @Override
     public String getName() {
@@ -178,7 +179,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
                                   boolean existingTokenUsed, boolean subOrgRequest,
                                   String appResidentOrgUuid) {
 
-        Object[] payload = new Object[24];
+        Object[] payload = new Object[25];
 
         payload[0] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
         payload[1] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.CLIENT_ID));
@@ -211,6 +212,7 @@ public class MoesifOAuthTokenIssuanceDataPublishHandler extends AbstractEventHan
         payload[22] = getStringOrNotAvailable(p.get(IdentityEventConstants.EventProperty.ERROR_MESSAGE));
 
         payload[23] = Instant.now().toString();
+        payload[24] = getStringOrNotAvailable(p.get(EVENT_PROP_ACTOR));
 
         return payload;
     }
