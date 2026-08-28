@@ -36,10 +36,13 @@ import org.wso2.carbon.identity.moesif.handler.internal.MoesifHandlerDataHolder;
 import org.wso2.carbon.identity.moesif.handler.util.MoesifHandlerUtils;
 import org.wso2.carbon.identity.organization.management.service.exception.OrganizationManagementException;
 
+import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.AUTHENTICATOR;
+import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.IDENTIFIER_EXECUTOR;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.TENANT_DOMAIN_NAMES;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_PUBLISHER_ENABLED;
 import static org.wso2.carbon.identity.moesif.handler.constant.MoesifHandlerConstants.USER_AUTHENTICATION_PUBLISHER_NAME;
@@ -72,7 +75,12 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
 
         if (IdentityEventConstants.EventName.AUTHENTICATION_STEP_SUCCESS.name().equals(event.getEventName()) ||
                 IdentityEventConstants.EventName.AUTHENTICATION_STEP_FAILURE.name().equals(event.getEventName())) {
-            AuthenticationData authenticationData = AnalyticsLoginDataPublisherUtils.buildAuthnDataForAuthnStepV110(event, true);
+            if (isIdentifierFirstStep(event)) {
+                // The user is not resolved at the identifier first step, hence such steps are not published.
+                return;
+            }
+            AuthenticationData authenticationData =
+                    AnalyticsLoginDataPublisherUtils.buildAuthnDataForAuthnStepV110(event, true);
             publishToMoesif(authenticationData, event, analyticsEnabled);
         } else if (IdentityEventConstants.EventName.AUTHENTICATION_SUCCESS.name().equals(event.getEventName()) ||
                 IdentityEventConstants.EventName.AUTHENTICATION_FAILURE.name().equals(event.getEventName())) {
@@ -82,6 +90,26 @@ public class MoesifUserAuthenticationDataPublishHandler extends AnalyticsLoginDa
         } else {
             LOG.error("Event " + event.getEventName() + " cannot be handled");
         }
+    }
+
+    /**
+     * Checks whether the given authentication step event was fired by the identifier first authenticator.
+     * Such steps only resolve the user identifier, hence they carry no authenticated user to publish.
+     *
+     * @param event Authentication step event.
+     * @return true if the step belongs to the identifier first authenticator, false otherwise.
+     */
+    private boolean isIdentifierFirstStep(Event event) {
+
+        Map<String, Object> eventProperties = event.getEventProperties();
+        if (eventProperties == null) {
+            return false;
+        }
+        Object params = eventProperties.get(IdentityEventConstants.EventProperty.PARAMS);
+        if (!(params instanceof Map)) {
+            return false;
+        }
+        return IDENTIFIER_EXECUTOR.equals(((Map<?, ?>) params).get(AUTHENTICATOR));
     }
 
     @SuppressWarnings("unchecked")
