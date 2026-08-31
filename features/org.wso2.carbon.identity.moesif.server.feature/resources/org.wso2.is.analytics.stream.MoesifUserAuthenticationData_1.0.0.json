@@ -167,6 +167,10 @@
       "type": "ARRAY"
     },
     {
+      "name": "groups",
+      "type": "ARRAY"
+    },
+    {
       "name": "customParam1",
       "type": "STRING"
     },
