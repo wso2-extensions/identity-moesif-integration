@@ -74,6 +74,15 @@ public class MoesifHandlerConstants {
     /** Tenant domain names property key used to resolve publishing domains. */
     public static final String TENANT_DOMAIN_NAMES = "tenantDomainNames";
 
+    /** Authenticator name property key carried in the params map of authentication step events. */
+    public static final String AUTHENTICATOR = "authenticator";
+
+    /**
+     * Name of the identifier first authenticator. Authentication step events fired by this authenticator only
+     * resolve the identifier, hence the user is not authenticated at that step.
+     */
+    public static final String IDENTIFIER_EXECUTOR = "IdentifierExecutor";
+
     public enum UserOnboardedMethod {
 
         ADMIN_INITIATED,

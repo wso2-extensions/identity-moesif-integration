@@ -26,11 +26,15 @@ import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Unit tests for {@link MoesifUserAuthenticationDataPublishHandler}.
@@ -85,6 +89,49 @@ public class MoesifUserAuthenticationDataPublishHandlerTest {
 
         Event event = new Event("UNKNOWN_EVENT", new HashMap<>());
         handler.handleEvent(event);
+    }
+
+    @Test
+    public void testIdentifierFirstStepIsDetected() throws Exception {
+
+        assertTrue(invokeIsIdentifierFirstStep(buildStepEvent("IdentifierExecutor")));
+    }
+
+    @Test
+    public void testOtherAuthenticatorStepIsNotIdentifierFirst() throws Exception {
+
+        assertFalse(invokeIsIdentifierFirstStep(buildStepEvent("BasicAuthenticator")));
+    }
+
+    @Test
+    public void testStepWithoutAuthenticatorIsNotIdentifierFirst() throws Exception {
+
+        assertFalse(invokeIsIdentifierFirstStep(buildStepEvent(null)));
+    }
+
+    @Test
+    public void testStepWithoutParamsIsNotIdentifierFirst() throws Exception {
+
+        assertFalse(invokeIsIdentifierFirstStep(new Event("AUTHENTICATION_STEP_SUCCESS", new HashMap<>())));
+    }
+
+    private static Event buildStepEvent(String authenticator) {
+
+        Map<String, Object> params = new HashMap<>();
+        if (authenticator != null) {
+            params.put("authenticator", authenticator);
+        }
+        Map<String, Object> eventProperties = new HashMap<>();
+        eventProperties.put("params", params);
+        return new Event("AUTHENTICATION_STEP_SUCCESS", eventProperties);
+    }
+
+    private boolean invokeIsIdentifierFirstStep(Event event) throws Exception {
+
+        Method method = MoesifUserAuthenticationDataPublishHandler.class
+                .getDeclaredMethod("isIdentifierFirstStep", Event.class);
+        method.setAccessible(true);
+        return (boolean) method.invoke(handler, event);
     }
 
     private static void injectDisabledConfig(Object target) throws Exception {
